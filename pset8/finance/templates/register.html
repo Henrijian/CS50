@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <form action="/register" method="POST">
+        <div class="form-group row justify-content-center">
+            <label for="user_name" class="col-sm-2 col-form-label">Username</label>
+            <div class="col-sm-auto">
+                <input type="text" class="form-control" id="user_name" name="username" placeholder="Enter username">
+            </div>
+        </div>
+        <div class="form-group row justify-content-center">
+            <label for="user_passwd" class="col-sm-2 col-form-label">Password</label>
+            <div class="col-sm-auto" >
+                <input type="password" class="form-control" id="user_passwd" name="password" placeholder="Password">
+            </div>
+        </div>
+        <div class="form-group row justify-content-center">
+            <label for="user_passwd_confirm" class="col-sm-2 col-form-label">Confirm Password</label>
+            <div class="col-sm-auto">
+                <input type="password" class="form-control" id="user_passwd_confirm" name="confirmation" aria-describedby="passwd_confirm_help" placeholder="Confirm password">
+                <small id="passwd_confirm_help" class="form-text text-muted" style="text-align:left;">Please reenter your password.</small>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+{% endblock %}
