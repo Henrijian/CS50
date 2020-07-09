@@ -1,6 +1,7 @@
 import os
 
 import sqlite3
+import datetime
 from flask import Flask, flash, jsonify, redirect, render_template, request, session
 from flask_session import Session
 from tempfile import mkdtemp
@@ -38,6 +39,10 @@ db = sqlite3.connect("finance.db", check_same_thread=False)
 db.row_factory = dict_factory
 cur = db.cursor()
 
+# datetime format
+DATE_FMT = "%Y-%m-%d"
+TIME_FMT = "%H:%M:%S"
+
 # Make sure API key is set
 if not os.environ.get("API_KEY"):
     raise RuntimeError("API_KEY not set")
@@ -54,7 +59,55 @@ def index():
 @login_required
 def buy():
     """Buy shares of stock"""
-    return apology("TODO")
+    if request.method == "POST":
+        # Check validation of symbol
+        symbol = request.form.get("symbol")
+        # Check existence of symbol
+        if not symbol:
+            return apology("Must provide symbol name", 403)
+        symbol_info = lookup(symbol)
+        if not symbol_info:
+            return apology("Cannot find queried symbol", 403)
+
+        # Check validation of shares
+        shares = request.form.get("shares")
+        if not shares:
+            return apology("Must provide shares number", 403)
+        shares = int(shares)
+        if not shares > 0:
+            return apology("Shares number must be positive", 403)
+
+        # Check if the user can afford the number of shares
+        uid = session["user_id"]
+        sql = "SELECT cash FROM users WHERE id=?"
+        cur.execute(sql, (uid,))
+        row = cur.fetchone()
+        if not row:
+            return apology("Cannot get user cash", 403)
+        cash = row["cash"]
+        share_price = symbol_info["price"]
+        shares_price = shares * share_price
+        if shares_price > cash:
+            return apology("You cannot afford the amount of shares", 403)
+
+        # Write to database
+        now = datetime.datetime.now()
+        date_str = now.strftime(DATE_FMT)
+        time_str = now.strftime(TIME_FMT)
+        sql = "INSERT INTO transactions (uid, action, date, time, symbol, price) VALUES(?,?,?,?,?,?)"
+        print((uid, "BUY", date_str, time_str, symbol, share_price) )
+        cur.execute(sql, (uid, "BUY", date_str, time_str, symbol, share_price))
+        if not cur.lastrowid:
+            return apology("Buy shares of symbol failed", 403)
+        sql = "UPDATE users SET cash=? WHERE id=?"
+        cur.execute(sql, (cash - shares_price, uid))
+        if cur.rowcount < 1:
+            return apology("Buy shares of symbol failed", 403)
+        db.commit()
+
+        return render_template("buy.html")
+    else:
+        return render_template("buy.html")
 
 
 @app.route("/history")

@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Buy
+{% endblock %}
+
+{% block main %}
+    <form action="/buy" method="POST">
+        <div class="form-group row justify-content-center">
+            <label for="symbol" class="col-sm-1 col-form-label">Symbol</label>
+            <div class="col-sm-auto">
+                <input type="text" class="form-control" id="symbol" name="symbol" placeholder="Enter symbol">
+            </div>
+        </div>
+        <div class="form-group row justify-content-center">
+            <label for="shares" class="col-sm-1 col-form-label">Shares</label>
+            <div class="col-sm-auto" >
+                <input type="number" class="form-control" id="shares" name="shares" placeholder="Shares number">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+{% endblock %}
