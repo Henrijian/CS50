@@ -94,9 +94,8 @@ def buy():
         now = datetime.datetime.now()
         date_str = now.strftime(DATE_FMT)
         time_str = now.strftime(TIME_FMT)
-        sql = "INSERT INTO transactions (uid, action, date, time, symbol, price) VALUES(?,?,?,?,?,?)"
-        print((uid, "BUY", date_str, time_str, symbol, share_price) )
-        cur.execute(sql, (uid, "BUY", date_str, time_str, symbol, share_price))
+        sql = "INSERT INTO transactions (uid, action, date, time, symbol, shares, price) VALUES(?,?,?,?,?,?,?)"
+        cur.execute(sql, (uid, "BUY", date_str, time_str, symbol, shares, share_price))
         if not cur.lastrowid:
             return apology("Buy shares of symbol failed", 403)
         sql = "UPDATE users SET cash=? WHERE id=?"
@@ -105,7 +104,7 @@ def buy():
             return apology("Buy shares of symbol failed", 403)
         db.commit()
 
-        return render_template("buy.html")
+        return redirect("/index")
     else:
         return render_template("buy.html")
 
