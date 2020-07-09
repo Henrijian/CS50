@@ -22,12 +22,6 @@ nav .navbar-brand .green
     color: #2e944b;
 }
 
-main .form-control
-{
-    /* center form controls */
-    display: inline-block;
-}
-
 main .form-group label
 {
     text-align: left;
