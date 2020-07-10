@@ -39,9 +39,11 @@ db = sqlite3.connect("finance.db", check_same_thread=False)
 db.row_factory = dict_factory
 cur = db.cursor()
 
-# datetime format
+# Database data format
 DATE_FMT = "%Y-%m-%d"
 TIME_FMT = "%H:%M:%S"
+ACTION_BUY = "BUY"
+ACTION_SELL = "SELL"
 
 # Make sure API key is set
 if not os.environ.get("API_KEY"):
@@ -52,7 +54,36 @@ if not os.environ.get("API_KEY"):
 @login_required
 def index():
     """Show portfolio of stocks"""
-    return apology("TODO")
+    uid = session["user_id"]
+    sql = "SELECT * FROM holdings WHERE uid=?"
+    cur.execute(sql, (uid,))
+    rows = cur.fetchall()
+    holdings = []
+    holdings_total = 0
+    for row in rows:
+        symbol = row["symbol"]
+        shares = row["shares"]
+        my_price = row["price"]
+        symbol_info = lookup(symbol)
+        cur_price = symbol_info["price"]
+        symbol_total = cur_price * shares
+        holding = {
+            "symbol": symbol,
+            "shares": shares,
+            "my_price": my_price,
+            "cur_price": cur_price,
+            "symbol_total": symbol_total
+        }
+        holdings.append(holding)
+        holdings_total += symbol_total
+    sql = "SELECT cash FROM users WHERE id=?"
+    cur.execute(sql, (uid,))
+    row = cur.fetchone()
+    if not row:
+        return apology("Cannot get user information", 403)
+    cash = row["cash"]
+    balance = cash + holdings_total
+    return render_template("index.html", holdings=holdings, balance=balance)
 
 
 @app.route("/buy", methods=["GET", "POST"])
@@ -68,6 +99,7 @@ def buy():
         symbol_info = lookup(symbol)
         if not symbol_info:
             return apology("Cannot find queried symbol", 403)
+        symbol = symbol.upper()
 
         # Check validation of shares
         shares = request.form.get("shares")
@@ -91,20 +123,39 @@ def buy():
             return apology("You cannot afford the amount of shares", 403)
 
         # Write to database
+        # Write to users table
+        sql = "UPDATE users SET cash=? WHERE id=?"
+        balance = cash - shares_price
+        cur.execute(sql, (balance, uid))
+        if cur.rowcount < 1:
+            return apology("Buy shares of symbol failed", 403)
+        # Write to transactions table
         now = datetime.datetime.now()
         date_str = now.strftime(DATE_FMT)
         time_str = now.strftime(TIME_FMT)
         sql = "INSERT INTO transactions (uid, action, date, time, symbol, shares, price) VALUES(?,?,?,?,?,?,?)"
-        cur.execute(sql, (uid, "BUY", date_str, time_str, symbol, shares, share_price))
+        cur.execute(sql, (uid, ACTION_BUY, date_str, time_str, symbol, shares, share_price))
         if not cur.lastrowid:
             return apology("Buy shares of symbol failed", 403)
-        sql = "UPDATE users SET cash=? WHERE id=?"
-        cur.execute(sql, (cash - shares_price, uid))
-        if cur.rowcount < 1:
+        # Write to holdings table
+        sql = "SELECT rowid, * FROM holdings WHERE uid=? AND symbol=? AND price=?"
+        cur.execute(sql, (uid, symbol, share_price))
+        row = cur.fetchone()
+        if row:
+            rowid = row["rowid"]
+            holding_shares = row["shares"] + shares
+            sql = "UPDATE holdings SET shares=? WHERE rowid=?"
+            cur.execute(sql, (holding_shares, rowid))
+        else:
+            holding_shares = shares
+            sql = "INSERT INTO holdings (uid, symbol, shares, price) VALUES(?,?,?,?)"
+            cur.execute(sql, (uid, symbol, holding_shares, share_price))
+        if not cur.lastrowid:
             return apology("Buy shares of symbol failed", 403)
+        # If everything is ok, update to database
         db.commit()
 
-        return redirect("/index")
+        return redirect("/")
     else:
         return render_template("buy.html")
 

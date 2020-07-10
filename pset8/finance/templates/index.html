@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Index
+{% endblock %}
+
+{% block main %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th scope="col">Symbol</th>
+                <th scope="col">Shares</th>
+                <th scope="col">My Price</th>
+                <th scope="col">Current Price</th>
+                <th scope="col">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for holding in holdings %}
+                <tr>
+                    <td>{{ holding["symbol"] }}</td>
+                    <td>{{ holding["shares"] }}</td>
+                    <td>{{ holding["my_price"] }}</td>
+                    <td>{{ holding["cur_price"] }}</td>
+                    <td>{{ holding["symbol_total"] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="4">Balance</th>
+
+                <th>{{ balance }}</th>
+            </tr>
+        </tfoot>
+    </table>
+{% endblock %}
