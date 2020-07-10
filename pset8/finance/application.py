@@ -66,7 +66,7 @@ def index():
         my_price = row["price"]
         symbol_info = lookup(symbol)
         cur_price = symbol_info["price"]
-        symbol_total = cur_price * shares
+        symbol_total = round(cur_price * shares, 2)
         holding = {
             "symbol": symbol,
             "shares": shares,
@@ -164,7 +164,14 @@ def buy():
 @login_required
 def history():
     """Show history of transactions"""
-    return apology("TODO")
+    uid = session["user_id"]
+    sql = "SELECT * FROM transactions WHERE uid=?"
+    cur.execute(sql, (uid,))
+    transactions = cur.fetchall()
+    transactions = sorted(transactions, key=lambda transaction: (transaction["date"], transaction["time"]))
+    for transaction in transactions:
+        transaction["total"] = round(transaction["price"] * transaction["shares"], 2)
+    return render_template("history.html", transactions=transactions)
 
 
 @app.route("/login", methods=["GET", "POST"])
