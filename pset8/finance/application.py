@@ -82,7 +82,7 @@ def index():
     if not row:
         return apology("Cannot get user information", 403)
     cash = row["cash"]
-    balance = cash + holdings_total
+    balance = round(cash + holdings_total, 2)
     return render_template("index.html", holdings=holdings, balance=balance)
 
 
@@ -293,7 +293,116 @@ def register():
 @login_required
 def sell():
     """Sell shares of stock"""
-    return apology("TODO")
+    if request.method == "POST":
+        # Check the validation of symbol
+        symbol = request.form.get("symbol")
+        if not symbol:
+            return apology("Must provide symbol", 403)
+        uid = session["user_id"]
+        sql = "SELECT symbol FROM holdings WHERE uid=?"
+        cur.execute(sql, (uid,))
+        rows = cur.fetchall()
+        if not rows:
+            return apology("Cannot get user holding symbols", 403)
+        holding_symbols = set()
+        for row in rows:
+            holding_symbols.add(row["symbol"])
+        if symbol not in holding_symbols:
+            return apology("You do not have selected symbol", 403)
+
+        # Check the validation of shares
+        shares = request.form.get("shares")
+        if not shares:
+            return apology("Must provide shares", 403)
+        shares = int(shares)
+        sql = "SELECT shares FROM holdings WHERE uid=? AND symbol=?"
+        cur.execute(sql, (uid, symbol))
+        rows = cur.fetchall()
+        if not rows:
+            return apology("Cannot get user holding shares", 403)
+        holding_shares = 0
+        for row in rows:
+            holding_shares += row["shares"]
+        if shares > holding_shares:
+            return apology("The number of shares is over your holding", 403)
+
+        # Update to database - users table
+        symbol_info = lookup(symbol)
+        if not symbol_info:
+            return apology("Cannot get symbol information", 403)
+        cur_price = symbol_info["price"]
+        gain = cur_price * shares
+        sql = "SELECT cash FROM users WHERE id=?"
+        cur.execute(sql, (uid,))
+        row = cur.fetchone()
+        if not row:
+            return apology("Cannot get user cash", 403)
+        cash = row["cash"] + gain
+        sql = "UPDATE users SET cash=? WHERE id=?"
+        cur.execute(sql, (cash, uid))
+        if cur.rowcount < 1:
+            return apology("Update cash to database failed", 403)
+
+        # Update to database - transaction table
+        sql = "INSERT INTO transactions (uid, action, date, time, symbol, shares, price) VALUES(?,?,?,?,?,?,?)"
+        now = datetime.datetime.now()
+        date_str = now.strftime(DATE_FMT)
+        time_str = now.strftime(TIME_FMT)
+        cur.execute(sql, (uid, ACTION_SELL, date_str, time_str, symbol, shares, cur_price))
+        if not cur.lastrowid:
+            return apology("Update transaction to database failed", 403)
+
+        # Update to database - holdings table
+        sql = "SELECT shares, price FROM holdings WHERE uid=? AND symbol=?"
+        cur.execute(sql, (uid, symbol))
+        rows = cur.fetchall()
+        if not rows:
+            return apology("Cannot get symbol holdings", 403)
+        symbol_holdings = []
+        for row in rows:
+            symbol_holding = {
+                "shares": row["shares"],
+                "price": row["price"]
+            }
+            symbol_holdings.append(symbol_holding)
+        symbol_holdings = sorted(symbol_holdings, key=lambda holding: holding["price"], reverse=True)
+        remain_shares = shares
+        for symbol_holding in symbol_holdings:
+            symbol_shares = symbol_holding["shares"]
+            if symbol_shares >= remain_shares:
+                symbol_holding["shares"] -= remain_shares
+                remain_shares = 0
+            else:
+                symbol_holding["shares"] = 0
+                remain_shares -= symbol_shares
+            if symbol_holding["shares"] == 0:
+                sql = "DELETE FROM holdings WHERE uid=? AND symbol=? AND shares=? AND price=?"
+                cur.execute(sql, (uid, symbol, symbol_shares, symbol_holding["price"]))
+                if cur.rowcount < 1:
+                    return apology("Update holdings to database failed", 403)
+            else:
+                sql = "UPDATE holdings SET shares=? WHERE uid=? AND symbol=? AND shares=? AND price=?"
+                cur.execute(sql, (symbol_holding["shares"], uid, symbol, symbol_shares, symbol_holding["price"]))
+                if cur.rowcount < 1:
+                    return apology("Update holdings to database failed", 403)
+            if remain_shares == 0:
+                break
+
+        # Update to database
+        db.commit()
+
+        return redirect("/")
+    else:
+        # Get the symbols that the current user holding
+        uid = session["user_id"]
+        sql = "SELECT symbol FROM holdings WHERE uid=?"
+        cur.execute(sql, (uid,))
+        rows = cur.fetchall()
+        symbols = set()
+        for row in rows:
+            symbols.add(row["symbol"])
+        symbols = sorted(symbols)
+        return render_template("sell.html", symbols=symbols)
 
 
 def errorhandler(e):
