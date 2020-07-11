@@ -6,16 +6,16 @@
 
 {% block main %}
     <h1>History</h1>
-    <table class="table table-bordered">
+    <table class="table table-hover" data-toggle="table">
         <thead>
             <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Time</th>
-                <th scope="col">Action</th>
-                <th scope="col">Symbol</th>
-                <th scope="col">Shares</th>
-                <th scope="col">Price</th>
-                <th scope="col">Total</th>
+                <th data-field="date" data-sortable="true">Date</th>
+                <th data-field="time" data-sortable="true">Time</th>
+                <th data-field="action" data-sortable="true">Action</th>
+                <th data-field="symbol" data-sortable="true">Symbol</th>
+                <th data-field="shares" data-sortable="true">Shares</th>
+                <th data-field="price" data-sortable="true">Price</th>
+                <th data-field="total" data-sortable="true">Total</th>
             </tr>
         </thead>
         <tbody>

@@ -76,14 +76,15 @@ def index():
         }
         holdings.append(holding)
         holdings_total += symbol_total
+    holdings = sorted(holdings, key=lambda holding: holding["symbol"])
     sql = "SELECT cash FROM users WHERE id=?"
     cur.execute(sql, (uid,))
     row = cur.fetchone()
     if not row:
         return apology("Cannot get user information", 403)
-    cash = row["cash"]
-    balance = round(cash + holdings_total, 2)
-    return render_template("index.html", holdings=holdings, balance=balance)
+    cash = round(row["cash"], 2)
+    total = round(cash + holdings_total, 2)
+    return render_template("index.html", holdings=holdings, cash=cash, total=total)
 
 
 @app.route("/buy", methods=["GET", "POST"])
