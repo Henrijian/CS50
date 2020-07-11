@@ -6,13 +6,14 @@
 
 {% block main %}
     <h1>Holdings</h1>
-    <table class="table table-hover">
+    <table class="table table-hover" style="text-align: left;">
         <thead>
             <tr>
                 <th>Symbol</th>
                 <th>Shares</th>
                 <th>My Price</th>
                 <th>Current Price</th>
+                <th>Action</th>
                 <th>Total</th>
             </tr>
         </thead>
@@ -23,11 +24,16 @@
                     <td>{{ holding["shares"] }}</td>
                     <td>{{ holding["my_price"] }}</td>
                     <td>{{ holding["cur_price"] }}</td>
+                    <td>
+                        <a href="/sell?symbol={{ holding["symbol"] }}&shares={{ holding["shares"] }}" class="btn btn-primary btn-sm" role="button">SELL</a>
+                        <a href="/buy?symbol={{ holding["symbol"] }}" class="btn btn-danger btn-sm" role="button">BUY</a>
+                    </td>
                     <td>{{ holding["symbol_total"] }}</td>
                 </tr>
             {% endfor %}
             <tr>
-                <td>Cash</td>
+                <td>CASH</td>
+                <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
@@ -36,6 +42,7 @@
         </tbody>
         <tfoot>
             <tr>
+                <th></th>
                 <th></th>
                 <th></th>
                 <th></th>

@@ -161,7 +161,10 @@ def buy():
 
         return redirect("/")
     else:
-        return render_template("buy.html")
+        symbol = request.args.get("symbol")
+        if not symbol:
+            symbol = ""
+        return render_template("buy.html", symbol=symbol)
 
 
 @app.route("/history")
@@ -306,8 +309,8 @@ def sell():
     """Sell shares of stock"""
     if request.method == "POST":
         # Check the validation of symbol
-        symbol = request.form.get("symbol")
-        if not symbol:
+        sell_symbol = request.form.get("symbol")
+        if not sell_symbol:
             return apology("Must provide symbol", 403)
         uid = session["user_id"]
         sql = "SELECT symbol FROM holdings WHERE uid=?"
@@ -318,7 +321,7 @@ def sell():
         holding_symbols = set()
         for row in rows:
             holding_symbols.add(row["symbol"])
-        if symbol not in holding_symbols:
+        if sell_symbol not in holding_symbols:
             return apology("You do not have selected symbol", 403)
 
         # Check the validation of shares
@@ -330,7 +333,7 @@ def sell():
         except:
             return apology("Must provide number for shares amount", 403)
         sql = "SELECT shares FROM holdings WHERE uid=? AND symbol=?"
-        cur.execute(sql, (uid, symbol))
+        cur.execute(sql, (uid, sell_symbol))
         rows = cur.fetchall()
         if not rows:
             return apology("Cannot get user holding shares", 403)
@@ -341,7 +344,7 @@ def sell():
             return apology("The number of shares is over your holding", 403)
 
         # Update to database - users table
-        symbol_info = lookup(symbol)
+        symbol_info = lookup(sell_symbol)
         if not symbol_info:
             return apology("Cannot get symbol information", 403)
         cur_price = symbol_info["price"]
@@ -362,13 +365,13 @@ def sell():
         now = datetime.datetime.now()
         date_str = now.strftime(DATE_FMT)
         time_str = now.strftime(TIME_FMT)
-        cur.execute(sql, (uid, ACTION_SELL, date_str, time_str, symbol, shares, cur_price))
+        cur.execute(sql, (uid, ACTION_SELL, date_str, time_str, sell_symbol, shares, cur_price))
         if not cur.lastrowid:
             return apology("Update transaction to database failed", 403)
 
         # Update to database - holdings table
         sql = "SELECT shares, price FROM holdings WHERE uid=? AND symbol=?"
-        cur.execute(sql, (uid, symbol))
+        cur.execute(sql, (uid, sell_symbol))
         rows = cur.fetchall()
         if not rows:
             return apology("Cannot get symbol holdings", 403)
@@ -391,12 +394,12 @@ def sell():
                 remain_shares -= symbol_shares
             if symbol_holding["shares"] == 0:
                 sql = "DELETE FROM holdings WHERE uid=? AND symbol=? AND shares=? AND price=?"
-                cur.execute(sql, (uid, symbol, symbol_shares, symbol_holding["price"]))
+                cur.execute(sql, (uid, sell_symbol, symbol_shares, symbol_holding["price"]))
                 if cur.rowcount < 1:
                     return apology("Update holdings to database failed", 403)
             else:
                 sql = "UPDATE holdings SET shares=? WHERE uid=? AND symbol=? AND shares=? AND price=?"
-                cur.execute(sql, (symbol_holding["shares"], uid, symbol, symbol_shares, symbol_holding["price"]))
+                cur.execute(sql, (symbol_holding["shares"], uid, sell_symbol, symbol_shares, symbol_holding["price"]))
                 if cur.rowcount < 1:
                     return apology("Update holdings to database failed", 403)
             if remain_shares == 0:
@@ -416,7 +419,20 @@ def sell():
         for row in rows:
             symbols.add(row["symbol"])
         symbols = sorted(symbols)
-        return render_template("sell.html", symbols=symbols)
+
+        # Get arguments from url address
+        sell_symbol = request.args.get("symbol")
+        shares = request.args.get("shares")
+        if shares:
+            try:
+                shares = int(shares)
+                if shares <= 0:
+                    shares = 1
+            except:
+                shares = 1
+        else:
+            shares = 1
+        return render_template("sell.html", symbols=symbols, sell_symbol=sell_symbol, shares=shares)
 
 
 @app.route("/account")
