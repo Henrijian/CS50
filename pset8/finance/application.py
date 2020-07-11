@@ -413,6 +413,60 @@ def sell():
         return render_template("sell.html", symbols=symbols)
 
 
+@app.route("/account")
+@login_required
+def account():
+    return render_template("account.html")
+
+
+@app.route("/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    if request.method == "POST":
+        # Check old password validation
+        old_passwd = request.form.get("old_passwd")
+        if not old_passwd:
+            return apology("Must provide old password", 403)
+
+        uid = session["user_id"]
+        sql = "SELECT hash FROM users WHERE id=?"
+        cur.execute(sql, (uid,))
+        row = cur.fetchone()
+        if not row:
+            return apology("Cannot get user info", 403)
+        user_passwd_hash = row["hash"]
+        if not check_password_hash(user_passwd_hash, old_passwd):
+            return apology("Provided password is not correct", 403)
+
+        # Check new password validation
+        new_passwd = request.form.get("new_passwd")
+        if not new_passwd:
+            return apology("Must provide new password", 403)
+
+        # Check new password confirmation validation
+        new_passwd_confirm = request.form.get("new_passwd_confirm")
+        if not new_passwd_confirm:
+            return apology("Must provide new password confirmation", 403)
+
+        # Check password match
+        if not new_passwd == new_passwd_confirm:
+            return apology("New password and confirmation do not match", 403)
+
+        # Write new password to database
+        new_passwd_hash = generate_password_hash(new_passwd)
+        sql = "UPDATE users SET hash=? WHERE id=?"
+        cur.execute(sql, (new_passwd_hash, uid))
+        if cur.rowcount < 1:
+            return apology("Update new password to database failed", 403)
+
+        # Update new data to database
+        db.commit()
+
+        return redirect("/")
+    else:
+        return render_template("change_password.html")
+
+
 def errorhandler(e):
     """Handle error"""
     if not isinstance(e, HTTPException):
