@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Deposit
+{% endblock %}
+
+{% block main %}
+    <form action="/deposit" method="POST">
+        <div class="form-group row justify-content-center">
+            <label for="deposit" class="col-sm-1 col-form-label">Deposit</label>
+            <div class="col-sm-auto">
+                <input type="number" class="form-control" id="deposit" name="deposit" placeholder="Deposit Amount($)">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+{% endblock %}

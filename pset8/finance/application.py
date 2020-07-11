@@ -106,7 +106,10 @@ def buy():
         shares = request.form.get("shares")
         if not shares:
             return apology("Must provide shares number", 403)
-        shares = int(shares)
+        try:
+            shares = int(shares)
+        except:
+            return apology("Must provide number for shares amount", 403)
         if not shares > 0:
             return apology("Shares number must be positive", 403)
 
@@ -322,7 +325,10 @@ def sell():
         shares = request.form.get("shares")
         if not shares:
             return apology("Must provide shares", 403)
-        shares = int(shares)
+        try:
+            shares = int(shares)
+        except:
+            return apology("Must provide number for shares amount", 403)
         sql = "SELECT shares FROM holdings WHERE uid=? AND symbol=?"
         cur.execute(sql, (uid, symbol))
         rows = cur.fetchall()
@@ -416,7 +422,14 @@ def sell():
 @app.route("/account")
 @login_required
 def account():
-    return render_template("account.html")
+    uid = session["user_id"]
+    sql = "SELECT cash FROM users WHERE id=?"
+    cur.execute(sql, (uid,))
+    row = cur.fetchone()
+    if not row:
+        return apology("Cannot get user info", 403)
+    cash = round(row["cash"], 2)
+    return render_template("account.html", cash=cash)
 
 
 @app.route("/change_password", methods=["GET", "POST"])
@@ -465,6 +478,42 @@ def change_password():
         return redirect("/")
     else:
         return render_template("change_password.html")
+
+
+@app.route("/deposit", methods=["POST", "GET"])
+@login_required
+def deposit():
+    if request.method == "POST":
+        # Check validation of deposit
+        deposit = request.form.get("deposit")
+        if not deposit:
+            return apology("Must provide deposit amount", 403)
+        try:
+            deposit = int(deposit)
+        except:
+            return apology("Must provide number for deposit amount", 403)
+        if not deposit > 0:
+            return apology("Must provide positive number for deposit amount", 403)
+
+        # Update to database
+        uid = session["user_id"]
+        sql = "SELECT cash FROM users WHERE id=?"
+        cur.execute(sql, (uid,))
+        row = cur.fetchone()
+        if not row:
+            return apology("Cannot get user info", 403)
+        cash = row["cash"]
+
+        sql = "UPDATE users SET cash=? WHERE id=?"
+        cur.execute(sql, (cash + deposit, uid))
+        if cur.rowcount < 1:
+            return apology("Deposit to account failed", 403)
+
+        db.commit()
+
+        return redirect("/")
+    else:
+        return render_template("deposit.html")
 
 
 def errorhandler(e):
