@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+<div class="card text-white bg-primary center mb-3 mx-auto" style="max-width: 20rem;">
+    <div class="card-header">Log In</div>
+    <div class="card-body">
+        <div class="alert alert-danger alert-dismissible show" role="alert" id="form_alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <form action="/login" method="POST" id="login_form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="Username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+            </div>
+            <button type="submit" class="btn btn-danger">Submit</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const login_form_id = "login_form";
+    const form_alert_id = "form_alert";
+    const username_fld_id = "username";
+    const password_fld_id = "password";
+
+    function show_form_alert() {
+        $("#" + form_alert_id).show();
+    }
+
+    function hide_form_alert() {
+        $("#" + form_alert_id).hide();
+    }
+
+    function form_alert(msg) {
+        $("#" + form_alert_id).html(msg);
+        show_form_alert();
+    }
+
+    $("form").submit(function(){
+        var submit_form = false;
+        $.ajax({
+            url: "/login_check",
+            async: false,
+            type: "POST",
+            data: {username: $("#" + username_fld_id).val(),
+                   password: $("#" + password_fld_id).val()},
+            dataType: "json",
+            success:function( data ) {
+                        submit_form = data["error_code"] == 0;
+                        if (submit_form) {
+                            hide_form_alert();
+                        } else {
+                            form_alert(data["error_message"]);
+                        }
+                    }
+        });
+        return submit_form;
+    });
+</script>
+<script>
+   hide_form_alert();
+</script>
+{% endblock %}
