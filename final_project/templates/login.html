@@ -22,7 +22,7 @@
                 <label for="password">Password</label>
                 <input type="password" class="form-control" id="password" name="password" placeholder="Password">
             </div>
-            <button type="submit" class="btn btn-danger">Submit</button>
+            <button type="submit" class="btn btn-info">Submit</button>
         </form>
     </div>
 </div>
@@ -49,7 +49,7 @@
     $("form").submit(function(){
         var submit_form = false;
         $.ajax({
-            url: "/login_check",
+            url: "/api/login_check",
             async: false,
             type: "POST",
             data: {username: $("#" + username_fld_id).val(),

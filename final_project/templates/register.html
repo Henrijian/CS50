@@ -54,7 +54,7 @@
     $("form").submit(function(){
         var submit_form = false;
         $.ajax({
-            url: "/register_check",
+            url: "/api/register_check",
             async: false,
             type: "POST",
             data: {username: $("#" + username_fld_id).val(),

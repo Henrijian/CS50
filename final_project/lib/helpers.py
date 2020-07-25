@@ -11,11 +11,18 @@ def apology(message, code):
     return render_template("apology.html", message=message, code=code), code
 
 
-def response_json(error_code):
-    if not isinstance(error_code, int):
+def response_json(error_code, error_msg="", result=""):
+    if not (isinstance(error_code, int)
+            and isinstance(error_msg, str)
+            and isinstance(result, str)):
         error_code = ERR_UNSUPPORT_DATA_TYPE
+        error_msg = error_message(error_code)
+        result = ""
+    if not error_msg:
+        error_msg = error_message(error_code)
     base_json = {"error_code": error_code,
-                 "error_message": error_message(error_code)}
+                 "error_message": error_msg,
+                 "result": result}
     return jsonify(base_json)
 
 

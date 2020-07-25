@@ -47,7 +47,7 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/register_check", methods=["GET", "POST"])
+@app.route("/api/register_check", methods=["GET", "POST"])
 def register_check():
     if request.method == "POST":
         # Get register information
@@ -93,7 +93,7 @@ def register():
         return render_template("register.html")
 
 
-@app.route("/login_check", methods=["GET", "POST"])
+@app.route("/api/login_check", methods=["GET", "POST"])
 def login_check():
     if request.method == "POST":
         # Get log-in information
@@ -148,6 +148,42 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")
+
+@app.route("/api/get_exercises")
+def get_exercises():
+    muscle_group = request.args.get('muscle_group')
+    if not muscle_group:
+        return response_json(ERR_MUSCLE_GROUP_EMPTY)
+
+    exercises = db_manager.get_exercises_by_muscle_group(muscle_group)
+    if not exercises:
+        return response_json(ERR_MUSCLE_GROUP_NOT_EXIST)
+
+    sep = ";"
+    validated_exercises = []
+    for exercise in exercises:
+        validated_exercises.append(exercise.replace(sep, ""))
+    validated_exercises = sorted(validated_exercises)
+    exercises_str = sep.join(validated_exercises)
+
+    return response_json(ERR_SUCCESS, result=exercises_str)
+
+@app.route("/record", methods=["GET", "POST"])
+@login_required
+def record():
+    if request.method == "POST":
+        return render_template("record.html")
+    else:
+        muscle_groups = sorted(db_manager.get_muscle_groups())
+        if len(muscle_groups) > 0:
+            strength_exercises = sorted(db_manager.get_exercises_by_muscle_group(muscle_groups[0]))
+        else:
+            strength_exercises = []
+        cardio_exercises = sorted(db_manager.get_cardio_exercises())
+
+        return render_template("record.html", muscle_groups=muscle_groups,
+                               strength_exercises=strength_exercises,
+                               cardio_exercises=cardio_exercises)
 
 
 def error_handler(e):

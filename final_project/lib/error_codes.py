@@ -12,6 +12,8 @@ ERR_PASSWORD_CONFIRM_UNMATCH = 10
 ERR_USERNAME_REPEAT = 11
 ERR_USERNAME_NOT_EXIST = 12
 ERR_PASSWORD_INCORRECT = 13
+ERR_MUSCLE_GROUP_EMPTY = 14
+ERR_MUSCLE_GROUP_NOT_EXIST = 15
 
 
 def error_message(error_code):
@@ -43,5 +45,9 @@ def error_message(error_code):
         return "Username does not exist"
     elif error_code == ERR_PASSWORD_INCORRECT:
         return "Password is not correct"
+    elif error_code == ERR_MUSCLE_GROUP_EMPTY:
+        return "Muscle group cannot be empty"
+    elif error_code == ERR_MUSCLE_GROUP_NOT_EXIST:
+        return "Muscle group does not exist"
     else:
         return "Unknown error"
