@@ -86,7 +86,7 @@ class FitBookDB:
     ##################################################
     # exercises table
     ##################################################
-    def get_exercises(self):
+    def get_exercise_names(self):
         sql = "SELECT %s FROM %s" % (EXERCISES_NAME_COL, EXERCISES_TABLE)
         self.cur.execute(sql)
         rows = self.cur.fetchall()
@@ -95,7 +95,7 @@ class FitBookDB:
             exercises.append(row[EXERCISES_NAME_COL])
         return exercises
 
-    def get_exercises_by_muscle_group(self, muscle_group):
+    def get_exercise_names_by_muscle_group(self, muscle_group):
         sql = "SELECT %s FROM %s WHERE %s=?" % (EXERCISES_NAME_COL, EXERCISES_TABLE, EXERCISES_MUSCLE_GROUP_COL)
         self.cur.execute(sql, (muscle_group,))
         rows = self.cur.fetchall()
@@ -104,7 +104,33 @@ class FitBookDB:
             exercises.append(row[EXERCISES_NAME_COL])
         return exercises
 
-    def get_exercises_by_type(self, exercise_type):
+    def get_exercise_ids_names_by_muscle_group(self, muscle_group):
+        sql = "SELECT %s, %s FROM %s WHERE %s=?" % (EXERCISES_ID_COL, EXERCISES_NAME_COL, EXERCISES_TABLE, EXERCISES_MUSCLE_GROUP_COL)
+        self.cur.execute(sql, (muscle_group,))
+        rows = self.cur.fetchall()
+        exercises = []
+        for row in rows:
+            id_name_token = (row[EXERCISES_ID_COL], row[EXERCISES_NAME_COL])
+            exercises.append(id_name_token)
+        return exercises
+
+    def get_exercise_ids_names_by_type(self, exercise_type):
+        sql = "SELECT %s, %s FROM %s WHERE %s=?" % (EXERCISES_ID_COL, EXERCISES_NAME_COL, EXERCISES_TABLE, EXERCISES_TYPE_COL)
+        self.cur.execute(sql, (exercise_type,))
+        rows = self.cur.fetchall()
+        exercises = []
+        for row in rows:
+            id_name_token = (row[EXERCISES_ID_COL], row[EXERCISES_NAME_COL])
+            exercises.append(id_name_token)
+        return exercises
+
+    def get_strength_exercise_ids_names(self):
+        return self.get_exercise_ids_names_by_type(EXERCISE_TYPE_STRENGTH)
+
+    def get_cardio_exercise_ids_names(self):
+        return self.get_exercise_ids_names_by_type(EXERCISE_TYPE_CARDIO)
+
+    def get_exercise_names_by_type(self, exercise_type):
         sql = "SELECT %s FROM %s WHERE %s=?" % (EXERCISES_NAME_COL, EXERCISES_TABLE, EXERCISES_TYPE_COL)
         self.cur.execute(sql, (exercise_type,))
         rows = self.cur.fetchall()
@@ -113,7 +139,13 @@ class FitBookDB:
             exercises.append(row[EXERCISES_NAME_COL])
         return exercises
 
-    def get_exercises_by_muscle_group_and_type(self, muscle_group, exercise_type):
+    def get_cardio_exercise_names(self):
+        return self.get_exercise_names_by_type(EXERCISE_TYPE_CARDIO)
+
+    def get_strength_exercise_names(self):
+        return self.get_exercise_names_by_type(EXERCISE_TYPE_STRENGTH)
+
+    def get_exercise_names_by_muscle_group_and_type(self, muscle_group, exercise_type):
         sql = "SELECT %s FROM %s WHERE %s=? AND %s=?" % (EXERCISES_NAME_COL, EXERCISES_TABLE, EXERCISES_MUSCLE_GROUP_COL, EXERCISES_TYPE_COL)
         self.cur.execute(sql, (muscle_group, exercise_type))
         rows = self.cur.fetchall()
@@ -122,14 +154,9 @@ class FitBookDB:
             exercises.append(row[EXERCISES_NAME_COL])
         return exercises
 
-    def get_strength_exercises_by_muscle_group(self, muscle_group):
-        return self.get_exercises_by_muscle_group_and_type(muscle_group, EXERCISE_TYPE_STRENGTH)
+    def get_strength_exercise_names_by_muscle_group(self, muscle_group):
+        return self.get_exercise_names_by_muscle_group_and_type(muscle_group, EXERCISE_TYPE_STRENGTH)
 
-    def get_cardio_exercises(self):
-        return self.get_exercises_by_type(EXERCISE_TYPE_CARDIO)
-
-    def get_strength_exercises(self):
-        return self.get_exercises_by_type(EXERCISE_TYPE_STRENGTH)
 
     ##################################################
     # muscle_groups table
@@ -142,3 +169,4 @@ class FitBookDB:
         for row in rows:
             muscle_groups.append(row[MUSCLE_GROUPS_NAME_COL])
         return muscle_groups
+

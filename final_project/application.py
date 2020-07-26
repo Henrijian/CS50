@@ -5,7 +5,7 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 
 # self-defined library
-from lib.helpers import apology, login_required, response_json
+from lib.helpers import *
 from lib.error_codes import *
 from lib.fitbookdb import FitBookDB
 # user associated lib
@@ -149,24 +149,28 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
+
 @app.route("/api/get_exercises")
 def get_exercises():
-    muscle_group = request.args.get('muscle_group')
-    if not muscle_group:
+    muscle_group_value = request.args.get('muscle_group')
+    if not muscle_group_value:
         return response_json(ERR_MUSCLE_GROUP_EMPTY)
 
-    exercises = db_manager.get_exercises_by_muscle_group(muscle_group)
-    if not exercises:
+    muscle_groups = db_manager.get_muscle_groups()
+    muscle_group_text = ""
+    for muscle_group in muscle_groups:
+        if validate_string(muscle_group) == muscle_group_value:
+            muscle_group_text = muscle_group
+    if not muscle_group_text:
         return response_json(ERR_MUSCLE_GROUP_NOT_EXIST)
 
-    sep = ";"
-    validated_exercises = []
-    for exercise in exercises:
-        validated_exercises.append(exercise.replace(sep, ""))
-    validated_exercises = sorted(validated_exercises)
-    exercises_str = sep.join(validated_exercises)
+    exercise_ids_names = db_manager.get_exercise_ids_names_by_muscle_group(muscle_group_text)
+    if not exercise_ids_names:
+        return response_json(ERR_MUSCLE_GROUP_NOT_EXIST)
+    exercise_ids_names = sorted(exercise_ids_names, key=lambda token: token[1])
 
-    return response_json(ERR_SUCCESS, result=exercises_str)
+    return response_json(ERR_SUCCESS, result=exercise_ids_names)
+
 
 @app.route("/record", methods=["GET", "POST"])
 @login_required
@@ -175,16 +179,23 @@ def record():
         return render_template("record.html")
     else:
         muscle_groups = sorted(db_manager.get_muscle_groups())
+        muscle_group_values_texts = []
+        for muscle_group in muscle_groups:
+            muscle_group_value = validate_string(muscle_group)
+            muslce_group_text = muscle_group
+            muslce_group_token = (muscle_group_value, muslce_group_text)
+            muscle_group_values_texts.append(muslce_group_token)
+
         if len(muscle_groups) > 0:
-            strength_exercises = sorted(db_manager.get_exercises_by_muscle_group(muscle_groups[0]))
+            strength_exercise_ids_names = db_manager.get_exercise_ids_names_by_muscle_group(muscle_groups[0])
+            strength_exercise_ids_names = sorted(strength_exercise_ids_names, key=lambda token: token[1])
         else:
-            strength_exercises = []
-        cardio_exercises = sorted(db_manager.get_cardio_exercises())
+            strength_exercise_ids_names = []
+        cardio_exercise_ids_names = sorted(db_manager.get_cardio_exercise_ids_names())
 
-        return render_template("record.html", muscle_groups=muscle_groups,
-                               strength_exercises=strength_exercises,
-                               cardio_exercises=cardio_exercises)
-
+        return render_template("record.html", muscle_group_values_texts=muscle_group_values_texts,
+                               strength_exercise_ids_names=strength_exercise_ids_names,
+                               cardio_exercise_ids_names=cardio_exercise_ids_names)
 
 def error_handler(e):
     """Handle error"""
