@@ -7,6 +7,7 @@ from functools import wraps
 from lib.error_codes import *
 from lib.str_utils import *
 
+
 def apology(message, code):
     return render_template("apology.html", message=message, code=code), code
 

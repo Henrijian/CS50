@@ -5,12 +5,6 @@
     th, td {
       text-align: center;
     }
-    .table {
-        margin: 0;
-    }
-    .accordion-body {
-        padding: 0;
-    }
 </style>
 {% endblock %}
 
@@ -19,172 +13,169 @@
 {% endblock %}
 
 {% block main %}
-<div class="card text-white bg-primary center mb-3 mx-auto" style="max-width: 30rem;">
+<div id="card_record_exercise" class="card text-white bg-primary center mb-3 mx-auto" style="max-width: 30rem;">
     <div class="card-header">Record</div>
     <div class="card-body">
-        <div class="alert alert-danger alert-dismissible show" role="alert" id="form_alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+        <div class="progress mb-3 d-none" id="record_loading">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" role="progressbar" style="width: 100%"> loading </div>
         </div>
 
         <h5 class="card-title">Date</h5>
-        <input type="text" readonly="" class="form-control datepicker" name="date" placeholder="yyyy-mm-dd" style="border-radius: 0px;">
+        <input id="record_exercise_date" type="text" readonly="" class="form-control datepicker" name="date" placeholder="yyyy-mm-dd" style="border-radius: 0px;">
 
         <hr class="my-3 sep">
 
         <h5 class="card-title">Exercises</h5>
-        <div class="card">
-            <div class="card-header px-2">
-                <a data-toggle="collapse" aria-expanded="false" href="#exercise_1">
-                    <i class="fas fa-caret-down collapse-open"></i>
-                    <i class="fas fa-caret-up collapse-close"></i>
-                    Chest Press
-                </a>
-                <div class="dropdown float-right">
-                    <button class="btn btn-outline-primary btn-sm m-0 p-0 px-3" style="border-color: rgba(0,0,0,0);" type="button" data-toggle="dropdown">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </button>
-                    <div class="dropdown-menu">
-                        <a type="button" class="btn dropdown-item" data-toggle="modal" data-target="#modal_add_exercise">Edit</a>
-                        <a type="button" class="btn dropdown-item" href="#">Delete</a>
-                    </div>
-                </div>
-            </div>
-            <div id="exercise_1" class="collapse">
-                <div class="card-body accordion-body">
-                    <table class="table table-hover table-dark table-sm">
-                        <thead>
-                            <tr>
-                                <th scope="col">Set</th>
-                                <th scope="col">Weight(kg)</th>
-                                <th scope="col">Reps</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th scope="row">1</th>
-                                <td>50</td>
-                                <td>12</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">2</th>
-                                <td>55</td>
-                                <td>10</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">3</th>
-                                <td>60</td>
-                                <td>8</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <div id="record_exercises">
+<!--            <div class="card exercise_record">-->
+<!--                <div class="card-header px-2">-->
+<!--                    <a data-toggle="collapse" aria-expanded="false" href="#exercise_1">-->
+<!--                        <i class="fas fa-caret-down collapse-open"></i>-->
+<!--                        <i class="fas fa-caret-up collapse-close"></i>-->
+<!--                        Chest Press-->
+<!--                    </a>-->
+<!--                    <div class="dropdown float-right">-->
+<!--                        <button class="btn btn-outline-primary btn-sm m-0 p-0 px-3" style="border-color: rgba(0,0,0,0);" type="button" data-toggle="dropdown">-->
+<!--                            <i class="fas fa-ellipsis-h"></i>-->
+<!--                        </button>-->
+<!--                        <div class="dropdown-menu">-->
+<!--                            <a type="button" class="btn dropdown-item" data-toggle="modal" data-target="#modal_add_exercise">Edit</a>-->
+<!--                            <a type="button" class="btn dropdown-item" href="#">Delete</a>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div id="exercise_1" class="collapse">-->
+<!--                    <div class="card-body p-0">-->
+<!--                        <table class="table table-hover table-dark table-sm m-0">-->
+<!--                            <thead>-->
+<!--                                <tr>-->
+<!--                                    <th scope="col">Set</th>-->
+<!--                                    <th scope="col">Weight(kg)</th>-->
+<!--                                    <th scope="col">Reps</th>-->
+<!--                                </tr>-->
+<!--                            </thead>-->
+<!--                            <tbody>-->
+<!--                                <tr>-->
+<!--                                    <th scope="row">1</th>-->
+<!--                                    <td>50</td>-->
+<!--                                    <td>12</td>-->
+<!--                                </tr>-->
+<!--                                <tr>-->
+<!--                                    <th scope="row">2</th>-->
+<!--                                    <td>55</td>-->
+<!--                                    <td>10</td>-->
+<!--                                </tr>-->
+<!--                                <tr>-->
+<!--                                    <th scope="row">3</th>-->
+<!--                                    <td>60</td>-->
+<!--                                    <td>8</td>-->
+<!--                                </tr>-->
+<!--                            </tbody>-->
+<!--                        </table>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
 
-        <div class="card">
-            <div class="card-header px-2">
-                <a data-toggle="collapse" aria-expanded="false" href="#exercise_2">
-                    <i class="fas fa-caret-down collapse-open"></i>
-                    <i class="fas fa-caret-up collapse-close"></i>
-                    Leg Press
-                </a>
-                <div class="dropdown float-right">
-                    <button class="btn btn-outline-primary btn-sm m-0 p-0 px-3" style="border-color: rgba(0,0,0,0);" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </button>
-                    <div class="dropdown-menu">
-                        <a type="button" class="btn dropdown-item" data-toggle="modal" data-target="#modal_add_exercise">Edit</a>
-                        <a type="button" class="btn dropdown-item" href="#">Delete</a>
-                    </div>
-                </div>
-            </div>
-            <div id="exercise_2" class="collapse">
-                <div class="card-body accordion-body">
-                    <table class="table table-hover table-dark table-sm">
-                        <thead>
-                            <tr>
-                                <th scope="col">Set</th>
-                                <th scope="col">Weight(kg)</th>
-                                <th scope="col">Reps</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th scope="row">1</th>
-                                <td>150</td>
-                                <td>12</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">2</th>
-                                <td>155</td>
-                                <td>10</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">3</th>
-                                <td>160</td>
-                                <td>8</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<!--            <div class="card exercise_record">-->
+<!--                <div class="card-header px-2">-->
+<!--                    <a data-toggle="collapse" aria-expanded="false" href="#exercise_2">-->
+<!--                        <i class="fas fa-caret-down collapse-open"></i>-->
+<!--                        <i class="fas fa-caret-up collapse-close"></i>-->
+<!--                        Leg Press-->
+<!--                    </a>-->
+<!--                    <div class="dropdown float-right">-->
+<!--                        <button class="btn btn-outline-primary btn-sm m-0 p-0 px-3" style="border-color: rgba(0,0,0,0);" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">-->
+<!--                            <i class="fas fa-ellipsis-h"></i>-->
+<!--                        </button>-->
+<!--                        <div class="dropdown-menu">-->
+<!--                            <a type="button" class="btn dropdown-item" data-toggle="modal" data-target="#modal_add_exercise">Edit</a>-->
+<!--                            <a type="button" class="btn dropdown-item" href="#">Delete</a>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div id="exercise_2" class="collapse">-->
+<!--                    <div class="card-body p-0">-->
+<!--                        <table class="table table-hover table-dark table-sm m-0">-->
+<!--                            <thead>-->
+<!--                                <tr>-->
+<!--                                    <th scope="col">Set</th>-->
+<!--                                    <th scope="col">Weight(kg)</th>-->
+<!--                                    <th scope="col">Reps</th>-->
+<!--                                </tr>-->
+<!--                            </thead>-->
+<!--                            <tbody>-->
+<!--                                <tr>-->
+<!--                                    <th scope="row">1</th>-->
+<!--                                    <td>150</td>-->
+<!--                                    <td>12</td>-->
+<!--                                </tr>-->
+<!--                                <tr>-->
+<!--                                    <th scope="row">2</th>-->
+<!--                                    <td>155</td>-->
+<!--                                    <td>10</td>-->
+<!--                                </tr>-->
+<!--                                <tr>-->
+<!--                                    <th scope="row">3</th>-->
+<!--                                    <td>160</td>-->
+<!--                                    <td>8</td>-->
+<!--                                </tr>-->
+<!--                            </tbody>-->
+<!--                        </table>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
 
-        <div class="card">
-            <div class="card-header px-2">
-                <a data-toggle="collapse" aria-expanded="false" href="#exercise_3">
-                    <i class="fas fa-caret-down collapse-open"></i>
-                    <i class="fas fa-caret-up collapse-close"></i>
-                    Running
-                </a>
-                <div class="dropdown float-right">
-                    <button class="btn btn-outline-primary btn-sm m-0 p-0 px-3" style="border-color: rgba(0,0,0,0);" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </button>
-                    <div class="dropdown-menu">
-                        <a type="button" class="btn dropdown-item" data-toggle="modal" data-target="#modal_add_exercise">Edit</a>
-                        <a type="button" class="btn dropdown-item" href="#">Delete</a>
-                    </div>
-                </div>
-            </div>
-            <div id="exercise_3" class="collapse">
-                <div class="card-body accordion-body">
-                    <table class="table table-hover table-dark table-sm">
-                        <thead>
-                            <tr>
-                                <th scope="col">Hrs</th>
-                                <th scope="col">Mins</th>
-                                <th scope="col">Secs</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th scope="row">00</th>
-                                <td>35</td>
-                                <td>00</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+<!--            <div class="card exercise_record">-->
+<!--                <div class="card-header px-2">-->
+<!--                    <a data-toggle="collapse" aria-expanded="false" href="#exercise_3">-->
+<!--                        <i class="fas fa-caret-down collapse-open"></i>-->
+<!--                        <i class="fas fa-caret-up collapse-close"></i>-->
+<!--                        Running-->
+<!--                    </a>-->
+<!--                    <div class="dropdown float-right">-->
+<!--                        <button class="btn btn-outline-primary btn-sm m-0 p-0 px-3" style="border-color: rgba(0,0,0,0);" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">-->
+<!--                            <i class="fas fa-ellipsis-h"></i>-->
+<!--                        </button>-->
+<!--                        <div class="dropdown-menu">-->
+<!--                            <a type="button" class="btn dropdown-item" data-toggle="modal" data-target="#modal_add_exercise">Edit</a>-->
+<!--                            <a type="button" class="btn dropdown-item" href="#">Delete</a>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div id="exercise_3" class="collapse">-->
+<!--                    <div class="card-body p-0">-->
+<!--                        <table class="table table-hover table-dark table-sm m-0">-->
+<!--                            <thead>-->
+<!--                                <tr>-->
+<!--                                    <th scope="col">Hrs</th>-->
+<!--                                    <th scope="col">Mins</th>-->
+<!--                                    <th scope="col">Secs</th>-->
+<!--                                </tr>-->
+<!--                            </thead>-->
+<!--                            <tbody>-->
+<!--                                <tr>-->
+<!--                                    <th scope="row">00</th>-->
+<!--                                    <td>35</td>-->
+<!--                                    <td>00</td>-->
+<!--                                </tr>-->
+<!--                            </tbody>-->
+<!--                        </table>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
         </div>
 
         <hr class="my-1 sep">
 
-        <button type="button" class="btn btn-outline-secondary btn-sm btn-block" data-toggle="modal" data-target="#modal_add_exercise">Add Exercise</button>
-        <div class="modal fade" id="modal_add_exercise">
+        <button id="btn_append_record_exercises" type="button" class="btn btn-outline-secondary btn-sm btn-block" data-toggle="modal" data-target="#modal_add_exercise">Add Exercise</button>
+        <div id="modal_add_exercise" class="modal fade" exercise_date="" exercise_order="">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header bg-primary">
-                        <h5 class="modal-title text-white">Add Exercise</h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-
                     <div class="modal-body">
+                        <div class="progress mb-3 d-none" id="modal_add_exercise_loading">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"> loading </div>
+                        </div>
+                        <label class="text-primary">TYPE</label>
                         <nav class="mb-3">
                             <div class="nav nav-pills nav-fill">
                                 <a class="nav-item nav-link active" data-toggle="tab" href="#strength_exercise_tab">Strength</a>
@@ -195,12 +186,12 @@
                             <div class="tab-pane fade active show" id="strength_exercise_tab">
                                 <div class="form-group">
                                     <label for="strength_muscle_group_select" class="text-primary">MUSCLE GROUP</label>
-                                    <select class="custom-select custom-select-sm muscle_group_select" id="strength_muscle_group_select" muscle-group-exercises="strength_exercise_select">
-                                        {% for muscle_group_value_text in muscle_group_values_texts %}
+                                    <select id="strength_muscle_group_select" class="custom-select custom-select-sm muscle_group_select" muscle-group-exercises="strength_exercise_select">
+                                        {% for strength_muscle_group_caption in strength_muscle_group_captions %}
                                             {% if loop.index0 == 0 %}
-                                            <option value="{{ muscle_group_value_text[0] }}" selected>{{ muscle_group_value_text[1] }}</option>
+                                            <option value="{{ strength_muscle_group_names[loop.index0] }}" selected>{{ strength_muscle_group_caption }}</option>
                                             {% else %}
-                                            <option value="{{ muscle_group_value_text[0] }}">{{ muscle_group_value_text[1] }}</option>
+                                            <option value="{{ strength_muscle_group_names[loop.index0] }}">{{ strength_muscle_group_caption }}</option>
                                             {% endif %}
                                         {% endfor %}
                                     </select>
@@ -208,12 +199,12 @@
 
                                 <div class="form-group">
                                     <label for="strength_exercise_select" class="text-primary">EXERCISE</label>
-                                    <select class="custom-select custom-select-sm" id="strength_exercise_select">
-                                        {% for strength_exercise_id_name in strength_exercise_ids_names %}
+                                    <select id="strength_exercise_select" class="custom-select custom-select-sm">
+                                        {% for strength_exercise_name in strength_exercise_names %}
                                             {% if loop.index0 == 0 %}
-                                            <option value="{{ strength_exercise_id_name[0] }}" selected>{{ strength_exercise_id_name[1] }}</option>
+                                            <option value="{{ strength_exercise_ids[loop.index0] }}" selected>{{ strength_exercise_name }}</option>
                                             {% else %}
-                                            <option value="{{ strength_exercise_id_name[0] }}">{{ strength_exercise_id_name[1] }}</option>
+                                            <option value="{{ strength_exercise_ids[loop.index0] }}">{{ strength_exercise_name }}</option>
                                             {% endif %}
                                         {% endfor %}
                                     </select>
@@ -232,29 +223,29 @@
                             <div class="tab-pane fade" id="cardio_exercise_tab">
                                 <div class="form-group">
                                     <label for="cardio_exercise_select" class="text-primary">EXERCISE</label>
-                                    <select class="custom-select custom-select-sm" id="cardio_exercise_select">
-                                        {% for cardio_exercise_id_name in cardio_exercise_ids_names %}
+                                    <select id="cardio_exercise_select" class="custom-select custom-select-sm">
+                                        {% for cardio_exercise_name in cardio_exercise_names %}
                                             {% if loop.index0 == 0 %}
-                                            <option value="{{ cardio_exercise_id_name[0] }}" selected>{{ cardio_exercise_id_name[1] }}</option>
+                                            <option value="{{ cardio_exercise_ids[loop.index0] }}" selected>{{ cardio_exercise_name }}</option>
                                             {% else %}
-                                            <option value="{{ cardio_exercise_id_name[0] }}">{{ cardio_exercise_id_name[1] }}</option>
+                                            <option value="{{ cardio_exercise_ids[loop.index0] }}">{{ cardio_exercise_name }}</option>
                                             {% endif %}
                                         {% endfor %}
                                     </select>
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="text-primary" for="cardio_exercise_time">TIME</label>
-                                    <div class="input-group input-group-sm" id="cardio_exercise_time">
-                                        <input type="number" class="form-control text-right" placeholder="Hours" value="">
+                                    <label for="cardio_exercise_time" class="text-primary">TIME</label>
+                                    <div id="cardio_exercise_time" class="input-group input-group-sm">
+                                        <input id="cardio_exercise_hrs" type="number" class="form-control text-right" placeholder="Hours" value="">
                                         <div class="input-group-append">
                                             <span class="input-group-text">HRS</span>
                                         </div>
-                                        <input type="number" class="form-control text-right" placeholder="Minutes" value="">
+                                        <input id="cardio_exercise_mins" type="number" class="form-control text-right" placeholder="Minutes" value="">
                                         <div class="input-group-append">
                                             <span class="input-group-text">MINS</span>
                                         </div>
-                                        <input type="number" class="form-control text-right" placeholder="Seconds" value="">
+                                        <input id="cardio_exercise_secs" type="number" class="form-control text-right" placeholder="Seconds" value="">
                                         <div class="input-group-append">
                                             <span class="input-group-text">SECS</span>
                                         </div>
@@ -265,7 +256,8 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">ADD</button>
+                        <button type="button" class="btn btn-danger" id="btn_add_exercise">ADD</button>
+                        <button type="button" class="btn btn-info" id="btn_save_exercise">SAVE</button>
                     </div>
                 </div>
             </div>
