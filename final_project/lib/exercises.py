@@ -1,6 +1,7 @@
 import datetime
+import sqlite3
 from .error_codes import *
-from .fitbookdb import *
+from .fitbook_db import *
 
 EXERCISE_DATE_FMT = "%Y-%m-%d"
 MAX_EXERCISE_SET_ORDER = 100
@@ -159,13 +160,13 @@ def is_exercise_set_valid(set_order, set_weight, set_reps):
     return ERR_SUCCESS
 
 
-def append_strength_exercise_record(db_manager, user_id, record_date, exercise_id, exercise_sets):
+def append_strength_exercise_record(db, user_id, record_date, exercise_id, exercise_sets):
     # db manager
-    if not isinstance(db_manager, FitBookDB):
-        raise Exception("database manager is not FitBookDB")
+    if not isinstance(db, sqlite3.Connection):
+        raise Exception("db is not a database")
 
     # User id
-    if not db_manager.user_id_exist(user_id):
+    if not user_id_exist(db, user_id):
         return ERR_USER_ID_NOT_EXIST
 
     # Record date
@@ -177,12 +178,12 @@ def append_strength_exercise_record(db_manager, user_id, record_date, exercise_i
     # Exercise id
     if not exercise_id:
         return ERR_EXERCISE_ID_EMPTY
-    exercise_name = db_manager.get_exercise_name_by_id(exercise_id)
+    exercise_name = get_exercise_name_by_id(db, exercise_id)
     if not exercise_name:
         return ERR_EXERCISE_ID_INVALID
 
     # Exercise type
-    exercise_type = db_manager.get_exercise_type_by_id(exercise_id)
+    exercise_type = get_exercise_type_by_id(db, exercise_id)
     if not exercise_type == EXERCISE_TYPE_STRENGTH:
         return ERR_EXERCISE_TYPE_INVALID
 
@@ -193,18 +194,18 @@ def append_strength_exercise_record(db_manager, user_id, record_date, exercise_i
         return ERR_EXERCISE_SETS_EMPTY
 
     # Get record id
-    record_id = db_manager.get_record_id(user_id, record_date)
+    record_id = get_record_id(db, user_id, record_date)
     if record_id <= 0:
-        db_manager.add_record_id(user_id, record_date)
-        record_id = db_manager.get_record_id(user_id, record_date)
+        add_record_id(db, user_id, record_date)
+        record_id = get_record_id(db, user_id, record_date)
         if record_id <= 0:
             raise Exception("Add record to database failed")
 
     # Get exercise order
     exercise_orders = []
-    record_details_ids = db_manager.get_record_details_ids(record_id)
+    record_details_ids = get_record_details_ids(db, record_id)
     for rdid in record_details_ids:
-        exercise_order = db_manager.get_record_details_exercise_order(rdid)
+        exercise_order = get_record_details_exercise_order(db, rdid)
         exercise_orders.append(exercise_order)
     if exercise_orders:
         exercise_order = max(exercise_orders) + 1
@@ -212,8 +213,8 @@ def append_strength_exercise_record(db_manager, user_id, record_date, exercise_i
         exercise_order = 1
 
     # Add record details
-    db_manager.add_record_details(record_id, exercise_id, exercise_order)
-    record_details_id = db_manager.get_record_details_id(record_id, exercise_id, exercise_order)
+    add_record_details(db, record_id, exercise_id, exercise_order)
+    record_details_id = get_record_details_id(db, record_id, exercise_id, exercise_order)
     if record_details_id <= 0:
         raise Exception("Add record details to database failed")
 
@@ -223,29 +224,28 @@ def append_strength_exercise_record(db_manager, user_id, record_date, exercise_i
         main_inset_order = 1
         main_weight = set.weight
         main_reps = set.reps
-        db_manager.add_strength_record(record_details_id, set_order, main_inset_order, main_weight, main_reps)
-        if db_manager.get_strength_record_id(record_details_id, set_order, main_inset_order, main_weight,
-                                             main_reps) <= 0:
+        add_strength_record(db, record_details_id, set_order, main_inset_order, main_weight, main_reps)
+        if get_strength_record_id(db, record_details_id, set_order, main_inset_order, main_weight,
+                                  main_reps) <= 0:
             raise Exception("Add strength record to database failed")
         for sub_idx, sub_set in enumerate(set.sub_sets):
             sub_inset_order = main_inset_order + sub_idx + 1
             sub_weight = sub_set.weight
             sub_reps = sub_set.reps
-            db_manager.add_strength_record(record_details_id, set_order, sub_inset_order, sub_weight, sub_reps)
-            if db_manager.get_strength_record_id(record_details_id, set_order, sub_inset_order, sub_weight,
-                                                 sub_reps) <= 0:
+            add_strength_record(db, record_details_id, set_order, sub_inset_order, sub_weight, sub_reps)
+            if get_strength_record_id(db, record_details_id, set_order, sub_inset_order, sub_weight, sub_reps) <= 0:
                 raise Exception("Add sub strength record to database failed")
 
     return ERR_SUCCESS
 
 
-def appen_cardio_exercise_record(db_manager, user_id, record_date, exercise_id, exercise_hours,
+def appen_cardio_exercise_record(db, user_id, record_date, exercise_id, exercise_hours,
                                  exercise_minutes, exercise_seconds):
-    if not isinstance(db_manager, FitBookDB):
-        raise Exception("database manager is not FitBookDB")
+    if not isinstance(db, sqlite3.Connection):
+        raise Exception("db is not a database")
 
     # User id
-    if not db_manager.user_id_exist(user_id):
+    if not user_id_exist(db, user_id):
         return ERR_USER_ID_NOT_EXIST
 
     # Record date
@@ -257,7 +257,7 @@ def appen_cardio_exercise_record(db_manager, user_id, record_date, exercise_id, 
     # Exercise id
     if not exercise_id:
         return ERR_EXERCISE_ID_EMPTY
-    exercise_name = db_manager.get_exercise_name_by_id(exercise_id)
+    exercise_name = get_exercise_name_by_id(db, exercise_id)
     if not exercise_name:
         return ERR_EXERCISE_ID_INVALID
 
@@ -298,40 +298,111 @@ def appen_cardio_exercise_record(db_manager, user_id, record_date, exercise_id, 
         return ERR_EXERCISE_TIME_NOT_EXIST
 
     # Exercise type
-    exercise_type = db_manager.get_exercise_type_by_id(exercise_id)
+    exercise_type = get_exercise_type_by_id(db, exercise_id)
     if not exercise_type == EXERCISE_TYPE_CARDIO:
         return ERR_EXERCISE_TYPE_INVALID
 
     # Get record id
-    record_id = db_manager.get_record_id(user_id, record_date)
+    record_id = get_record_id(db, user_id, record_date)
     if record_id <= 0:
-        db_manager.add_record_id(user_id, record_date)
-        record_id = db_manager.get_record_id(user_id, record_date)
+        add_record_id(db, user_id, record_date)
+        record_id = get_record_id(db, user_id, record_date)
         if record_id <= 0:
             raise Exception("Add record to database failed")
 
     # Get exercise order
-    exercise_orders = db_manager.get_record_details_orders(record_id)
+    exercise_orders = get_record_details_orders(db, record_id)
     if exercise_orders:
         exercise_order = max(exercise_orders) + 1
     else:
         exercise_order = 1
 
     # Add record details
-    db_manager.add_record_details(record_id, exercise_id, exercise_order)
-    record_details_id = db_manager.get_record_details_id(record_id, exercise_id, exercise_order)
+    add_record_details(db, record_id, exercise_id, exercise_order)
+    record_details_id = get_record_details_id(db, record_id, exercise_id, exercise_order)
     if record_details_id <= 0:
         raise Exception("Add record details to database failed")
 
     # Add to database
-    db_manager.add_cardio_record(record_details_id, exercise_hours, exercise_minutes, exercise_seconds)
-    if not db_manager.cardio_record_exist(record_details_id, exercise_hours, exercise_minutes, exercise_seconds):
+    add_cardio_record(db, record_details_id, exercise_hours, exercise_minutes, exercise_seconds)
+    if not cardio_record_exist(db, record_details_id, exercise_hours, exercise_minutes, exercise_seconds):
         raise Exception("Add cardio record to database failed")
 
     return ERR_SUCCESS
 
-def get_exercise_records(db_manager, user_id, record_date):
-    if not isinstance(db_manager, FitBookDB):
+
+def get_exercise_record(db, record_details_id):
+    if not isinstance(db, sqlite3.Connection):
+        raise Exception("database manager is not FitBookDB")
+
+    if not record_details_id_exist(db, record_details_id):
+        raise Exception("record details id does not exist")
+
+    # Get exercise record
+    exercise_record = ExerciseRecord()
+    exercise_record.record_details_id = record_details_id
+
+    # Get exercise id
+    exercise_id = get_exercise_id_by_record_details_id(db, record_details_id)
+    if exercise_id <= 0:
+        raise Exception("Cannot get exercise id by record details id(%s)" % record_details_id)
+
+    # Get exercise type
+    exercise_type = get_exercise_type_by_id(db, exercise_id)
+    if not exercise_type:
+        raise Exception("Cannot get exercise type by id(%d)" % exercise_id)
+    exercise_record.exercise_type = exercise_type
+
+    # Get muscle group
+    muscle_group = get_exercise_muscle_group_by_id(db, exercise_id)
+    if not muscle_group:
+        raise Exception("Cannot get muscle group by id(%d)" % exercise_id)
+    exercise_record.muscle_group = muscle_group
+
+    # Get exercise name
+    exercise_name = get_exercise_name_by_id(db, exercise_id)
+    if not exercise_name:
+        raise Exception("Cannot get exercise name by id(%d)" % exercise_id)
+    exercise_record.exercise_name = exercise_name
+
+    if exercise_type == EXERCISE_TYPE_STRENGTH:
+        # Get exercise sets
+        strength_record_ids = get_strength_records_ids_by_record_details_id(db, record_details_id)
+        for strength_record_id in strength_record_ids:
+            set_order = get_set_order_by_strength_record_id(db, strength_record_id)
+            if set_order <= 0:
+                raise Exception("cannot get set order from strength record id(%d)" % strength_record_id)
+            inset_order = get_inset_order_by_strength_record_id(db, strength_record_id)
+            if inset_order <= 0:
+                raise Exception("cannot get inset order from strength record id(%d)" % strength_record_id)
+            weight = get_weight_by_strength_record_id(db, strength_record_id)
+            reps = get_reps_by_strength_record_id(db, strength_record_id)
+            if inset_order > 1:
+                for exercise_set in exercise_record.exercise_sets:
+                    if exercise_set.order == set_order:
+                        exercise_set.sub_sets.append_set(inset_order, weight, reps)
+                        exercise_set.sub_sets.sort_by_order()
+                        break
+            else:
+                exercise_record.exercise_sets.append_set(set_order, weight, reps)
+        exercise_record.exercise_sets.sort_by_order()
+    elif exercise_type == EXERCISE_TYPE_CARDIO:
+        # Get cardio exercise time
+        hours = get_hours_by_record_details_id(db, record_details_id)
+        minutes = get_minutes_by_record_details_id(db, record_details_id)
+        seconds = get_seconds_by_record_details_id(db, record_details_id)
+        if hours < 0 or minutes < 0 or seconds < 0:
+            raise Exception("cannot get cardio exercise time from record details id(%d)" % record_details_id)
+        exercise_record.exercise_time.hours = hours
+        exercise_record.exercise_time.minutes = minutes
+        exercise_record.exercise_time.seconds = seconds
+    else:
+        raise Exception("Unknown exercise type(%s)" % exercise_type)
+    return exercise_record
+
+
+def get_exercise_records(db, user_id, record_date):
+    if not isinstance(db, sqlite3.Connection):
         raise Exception("database manager is not FitBookDB")
     if not user_id:
         raise Exception("Cannot get exercise records by empty user id")
@@ -341,12 +412,12 @@ def get_exercise_records(db_manager, user_id, record_date):
     exercise_records = ExerciseRecords()
 
     # Get record id
-    record_id = db_manager.get_record_id(user_id, record_date)
+    record_id = get_record_id(db, user_id, record_date)
     if record_id <= 0:
         return exercise_records
 
     # Get record details ids and exercise ids and orders
-    rdids_eids_orders = db_manager.get_rdids_eids_orders_by_record_id(record_id)
+    rdids_eids_orders = get_rdids_eids_orders_by_record_id(db, record_id)
     if not rdids_eids_orders:
         return exercise_records
     sorted(rdids_eids_orders, key=lambda token: token[2])
@@ -360,60 +431,7 @@ def get_exercise_records(db_manager, user_id, record_date):
 
     # Get exercise records
     for i in range(len(record_details_ids)):
-        exercise_record = ExerciseRecord()
-
         record_details_id = record_details_ids[i]
-        exercise_id = exercise_ids[i]
-
-        exercise_record.record_details_id = record_details_id
-
-        exercise_type = db_manager.get_exercise_type_by_id(exercise_id)
-        if not exercise_type:
-            raise Exception("Cannot get exercise type by id(%d)" % exercise_id)
-        exercise_record.exercise_type = exercise_type
-
-        muscle_group = db_manager.get_exercise_muscle_group_by_id(exercise_id)
-        if not muscle_group:
-            raise Exception("Cannot get muscle group by id(%d)" % exercise_id)
-        exercise_record.muscle_group = muscle_group
-
-        exercise_name = db_manager.get_exercise_name_by_id(exercise_id)
-        if not exercise_name:
-            raise Exception("Cannot get exercise name by id(%d)" % exercise_id)
-        exercise_record.exercise_name = exercise_name
-
-        if exercise_type == EXERCISE_TYPE_STRENGTH:
-            # Get exercise sets
-            strength_record_ids = db_manager.get_strength_records_ids_by_record_details_id(record_details_id)
-            for strength_record_id in strength_record_ids:
-                set_order = db_manager.get_set_order_by_strength_record_id(strength_record_id)
-                if set_order <= 0:
-                    raise Exception("cannot get set order from strength record id(%d)" % strength_record_id)
-                inset_order = db_manager.get_inset_order_by_strength_record_id(strength_record_id)
-                if inset_order <= 0:
-                    raise Exception("cannot get inset order from strength record id(%d)" % strength_record_id)
-                weight = db_manager.get_weight_by_strength_record_id(strength_record_id)
-                reps = db_manager.get_reps_by_strength_record_id(strength_record_id)
-                if inset_order > 1:
-                    for exercise_set in exercise_record.exercise_sets:
-                        if exercise_set.order == set_order:
-                            exercise_set.sub_sets.append_set(inset_order, weight, reps)
-                            exercise_set.sub_sets.sort_by_order()
-                            break
-                else:
-                    exercise_record.exercise_sets.append_set(set_order, weight, reps)
-            exercise_record.exercise_sets.sort_by_order()
-        elif exercise_type == EXERCISE_TYPE_CARDIO:
-            # Get cardio exercise time
-            hours = db_manager.get_hours_by_record_details_id(record_details_id)
-            minutes = db_manager.get_minutes_by_record_details_id(record_details_id)
-            seconds = db_manager.get_seconds_by_record_details_id(record_details_id)
-            if hours < 0 or minutes < 0 or seconds < 0:
-                raise Exception("cannot get cardio exercise time from record details id(%d)" % record_details_id)
-            exercise_record.exercise_time.hours = hours
-            exercise_record.exercise_time.minutes = minutes
-            exercise_record.exercise_time.seconds = seconds
-        else:
-            raise Exception("Unknown exercise type(%s)" % exercise_type)
+        exercise_record = get_exercise_record(db, record_details_id)
         exercise_records.append(exercise_record)
     return exercise_records

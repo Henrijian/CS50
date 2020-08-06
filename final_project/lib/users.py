@@ -1,6 +1,7 @@
 import re
+import sqlite3
 from .error_codes import *
-from .fitbookdb import *
+from .fitbook_db import *
 from werkzeug.security import check_password_hash, generate_password_hash
 
 MIN_LEN_USERNAME = 5
@@ -58,9 +59,9 @@ def is_password_valid(password):
 
 
 # return error code
-def is_register_info_valid(db_manager, username, password, confirmation):
-    if not isinstance(db_manager, FitBookDB):
-        raise Exception("database manager is not FitBookDB")
+def is_register_info_valid(db, username, password, confirmation):
+    if not isinstance(db, sqlite3.Connection):
+        raise Exception("db is not a database")
 
     # Check username follows format
     code = is_username_valid(username)
@@ -74,7 +75,7 @@ def is_register_info_valid(db_manager, username, password, confirmation):
     if password != confirmation:
         return ERR_PASSWORD_CONFIRM_UNMATCH
     # Check register information is valid in database
-    if db_manager.username_exist(username):
+    if username_exist(db, username):
         return ERR_USERNAME_REPEAT
     return ERR_SUCCESS
 
@@ -89,9 +90,9 @@ def password_hash_correct(password_hash, password):
     return check_password_hash(password_hash, password)
 
 
-def register_user(db_manager, username, password):
-    if not isinstance(db_manager, FitBookDB):
-        raise Exception("database manager is not FitBookDB")
+def register_user(db, username, password):
+    if not isinstance(db, sqlite3.Connection):
+        raise Exception("db is not a database")
 
     code = is_username_valid(username)
     if code != ERR_SUCCESS:
@@ -100,16 +101,16 @@ def register_user(db_manager, username, password):
     if code != ERR_SUCCESS:
         return code
     hash = get_password_hash(password)
-    db_manager.add_user(username, hash)
+    add_user(db, username, hash)
     return ERR_SUCCESS
 
 
-def login_user(db_manager, username, password):
+def login_user(db, username, password):
     if not username:
         return ERR_USERNAME_EMPTY
     if not password:
         return ERR_PASSWORD_EMPTY
-    if not isinstance(db_manager, FitBookDB):
+    if not isinstance(db, sqlite3.Connection):
         raise Exception("database manager is not FitBookDB")
     if not isinstance(username, str):
         return ERR_UNSUPPORT_DATA_TYPE
@@ -117,11 +118,11 @@ def login_user(db_manager, username, password):
         return ERR_UNSUPPORT_DATA_TYPE
 
     # Check user exist
-    if not db_manager.username_exist(username):
+    if not username_exist(db, username):
         return ERR_USERNAME_NOT_EXIST
 
     # Check password correct
-    user_hash = db_manager.get_user_hash(username)
+    user_hash = get_user_hash(db, username)
     if not password_hash_correct(user_hash, password):
         return ERR_PASSWORD_INCORRECT
 

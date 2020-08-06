@@ -2,7 +2,7 @@ import os
 import requests
 import urllib.parse
 import json
-from flask import redirect, render_template, request, session, jsonify
+from flask import redirect, render_template, session, jsonify
 from functools import wraps
 from lib.error_codes import *
 from lib.str_utils import *
