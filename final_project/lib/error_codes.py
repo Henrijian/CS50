@@ -31,7 +31,7 @@ ERR_EXERCISE_DATE_INVALID = 29
 ERR_EXERCISE_ID_NOT_EXIST = 30
 ERR_RECORD_ID_NOT_EXIST = 31
 ERR_RECORD_DETAILS_ID_NOT_EXIST = 32
-ERR_EXERCISE_TIME_NOT_EXIST = 33
+ERR_EXERCISE_TIME_INVALID = 33
 ERR_USER_ID_NOT_EXIST = 34
 ERR_INTERNAL = 35
 ERR_EXERCISE_TYPE_INVALID = 36
@@ -102,8 +102,8 @@ def error_message(error_code):
         return "Record id does not exist"
     elif error_code == ERR_RECORD_DETAILS_ID_NOT_EXIST:
         return "Record details id does not exist"
-    elif error_code == ERR_EXERCISE_TIME_NOT_EXIST:
-        return "Exercise time does not exist"
+    elif error_code == ERR_EXERCISE_TIME_INVALID:
+        return "Exercise time is not valid"
     elif error_code == ERR_USER_ID_NOT_EXIST:
         return "User id does not exist"
     elif error_code == ERR_INTERNAL:

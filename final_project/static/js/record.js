@@ -148,7 +148,7 @@ var get_set_element = function(set_order, set_weight = 0, set_reps = 0, is_sub_s
         return set_item;
 }
 
-// get exercise record card header
+// get exercise record card element
 var get_exercise_record_card_element = function(record_details_id, exercise_name) {
     // create exercise card
     const exercise_card = document.createElement("div");
@@ -169,7 +169,7 @@ var get_exercise_record_card_element = function(record_details_id, exercise_name
     card_header_link.setAttribute("href", "#" + card_body_id);
     card_header_link.innerHTML = "<i class=\"fas fa-caret-down collapse-open pr-1\"></i>"
                                 +"<i class=\"fas fa-caret-up collapse-close pr-1\"></i>"
-                                + exercise_name;
+                                +"<span class=\"exercise_record_name\">"+exercise_name+"</span>";
 
     // dropdown menu
     const dropdown_container = document.createElement("div");
@@ -223,6 +223,22 @@ var get_exercise_record_card_element = function(record_details_id, exercise_name
     card_body.classList.add("card-body", "p-0");
 
     return exercise_card;
+}
+
+// change exercise record card header name
+var change_exercise_record_card_header_name = function(record_details_id, exercise_name) {
+    const exercise_record_element = $("#" + RECORD_EXERCISES_ID + " .exercise_record[record_details_id='"+record_details_id+"']");
+    if (exercise_record_element.length == 0) {
+        console.log("cannot find exercise record element");
+        return false;
+    }
+    const exercise_name_label = exercise_record_element.find(".exercise_record_name");
+    if (exercise_name_label.length == 0) {
+        console.log("cannot find exercise name label in record element");
+        return false;
+    }
+    exercise_name_label.html(exercise_name);
+    return true;
 }
 
 // get strength exercise element
@@ -435,7 +451,7 @@ var initialize_edit_exercise_modal = function(record_details_id) {
 }
 
 // load strength exercise modal
-var show_strength_exercise_modal = function(record_details_id, muscle_group, exercise_name, exercise_sets) {
+var show_strength_edit_exercise_modal = function(record_details_id, muscle_group, exercise_name, exercise_sets) {
     initialize_edit_exercise_modal(record_details_id);
     // select strength tab
     $("#" + STRENGTH_EXERCISE_TAB_ID).tab("show");
@@ -508,7 +524,7 @@ var show_strength_exercise_modal = function(record_details_id, muscle_group, exe
 }
 
 // load cardio exercise modal
-var show_cardio_exercise_modal = function(record_details_id, exercise_name, exercise_hours, exercise_minutes, exercise_seconds) {
+var show_cardio_edit_exercise_modal = function(record_details_id, exercise_name, exercise_hours, exercise_minutes, exercise_seconds) {
     initialize_edit_exercise_modal(record_details_id);
     // select strength tab
     $("#" + CARDIO_EXERCISE_TAB_ID).tab("show");
@@ -569,14 +585,13 @@ var show_edit_exercise_modal = function(record_details_id) {
                 const exercise_name = result["exercise_name"];
                 if (exercise_type == "strength") {
                     const exercise_sets = get_exercise_sets(result["exercise_sets"]);
-                    console.log(exercise_sets);
-                    show_strength_exercise_modal(record_details_id, muscle_group, exercise_name, exercise_sets);
+                    show_strength_edit_exercise_modal(record_details_id, muscle_group, exercise_name, exercise_sets);
                 } else if (exercise_type == "cardio") {
                     const exercise_time = result["exercise_time"];
                     const exercise_hours = exercise_time["hours"];
                     const exercise_minutes = exercise_time["minutes"];
                     const exercise_seconds = exercise_time["seconds"];
-                    show_cardio_exercise_modal(record_details_id, exercise_name, exercise_hours, exercise_minutes, exercise_seconds);
+                    show_cardio_edit_exercise_modal(record_details_id, exercise_name, exercise_hours, exercise_minutes, exercise_seconds);
                 } else {
                     console.log("unknown exercise type");
                 }
@@ -594,7 +609,114 @@ var show_edit_exercise_modal = function(record_details_id) {
 
 // save edit exercise modal
 var save_edit_exercise_modal = function(record_details_id) {
+    const strength_exercise_tab_active = $("#" + STRENGTH_EXERCISE_TAB_PANE_ID + ".active").length > 0;
+    var exercise_id;
+    var exercise_name;
+    var exercise_sets;
+    var exercise_sets = [];
+    var exercise_hours;
+    var exercise_minutes;
+    var exercise_seconds;
+    if (strength_exercise_tab_active) {
+        // get exercise id
+        const exercise_select = $("#" + STRENGTH_EXERCISE_SELECT_ID);
+        if (exercise_select.length == 0) {
+            console.log("exercise selector does not exist");
+            return false;
+        }
+        exercise_id = $("#" + STRENGTH_EXERCISE_SELECT_ID).val();
+        // get exercise_name
+        exercise_name = $("#" + STRENGTH_EXERCISE_SELECT_ID + " :selected").text();
+        // get strength exercise sets
+        const exercise_set_items = $("#" + EXERCISE_SETS_ID).children(".exercise_set, .exercise_sub_set");
+        if (exercise_set_items.length == 0) {
+            alert_add_exercise_modal("sets cannot be empty");
+            return false;
+        }
+        exercise_set_items.each(function(index) {
+            const order = $(this).attr("set_order");
+            if (!order) {
+                console.log("cannot get set order");
+                return false;
+            }
 
+            // get weight of each set
+            const weight_input = $(this).children("input.exercise_weight").get(0);
+            if (!weight_input) {
+                console.log("cannot get weight input");
+                return false;
+            }
+            const weight = weight_input.value;
+
+            // get repetitions of each set
+            const reps_input = $(this).children("input.exercise_reps").get(0);
+            if (!reps_input) {
+                console.log("cannot get repetitions input");
+                return false;
+            }
+            const reps = reps_input.value;
+
+            exercise_sets.push({
+                set_order: order,
+                set_weight: weight,
+                set_reps: reps,
+            });
+        });
+    }
+    else {
+        // get exercise id
+        const exercise_select = $("#" + CARDIO_EXERCISE_SELECT_ID);
+        if (exercise_select.length == 0) {
+            console.log("exercise selector does not exist");
+            return false;
+        }
+        exercise_id = $("#" + CARDIO_EXERCISE_SELECT_ID).val();
+        // get exercise_name
+        exercise_name = $("#" + CARDIO_EXERCISE_SELECT_ID + " :selected").text();
+        // get exercise hours
+        exercise_hours = document.getElementById(CARDIO_EXERCISE_HOURS_ID).value;
+        // get exercise minutes
+        exercise_minutes = document.getElementById(CARDIO_EXERCISE_MINUTES_ID).value;
+        // get exercise seconds
+        exercise_seconds = document.getElementById(CARDIO_EXERCISE_SECONDS_ID).value;
+    }
+    if (!exercise_id) {
+        console.log("cannot get exercise id");
+        return false;
+    }
+    if (!exercise_name) {
+        console.log("cannot get exercise name");
+        return false;
+    }
+    // add exercise record to server
+    $.ajax({
+        url: "/api/edit_exercise_record",
+        type: "POST",
+        data: {"record_details_id": record_details_id,
+               "exercise_id": exercise_id,
+               "exercise_sets": JSON.stringify(exercise_sets),
+               "exercise_hours": exercise_hours,
+               "exercise_minutes": exercise_minutes,
+               "exercise_seconds": exercise_seconds},
+        dataType: "json",
+        beforeSend:function() {
+            toggle_on_loading_progress_bar_exercise_modal();
+        },
+        success:function(data) {
+            if (data["error_code"] == 0) {
+                if (change_exercise_record_card_header_name(record_details_id, exercise_name)) {
+                    $("#" + MODAL_ADD_EXERCISE_ID).modal('hide');
+                } else {
+                    alert_add_exercise_modal("Cannot modify exercise name in list");
+                }
+            } else {
+                alert_add_exercise_modal(data["error_message"]);
+            }
+        },
+        complete:function() {
+            toggle_off_loading_progress_bar_exercise_modal();
+        }
+    });
 }
 
 // initialize exercise records

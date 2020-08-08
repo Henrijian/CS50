@@ -187,7 +187,7 @@ def get_exercises():
 @app.route("/api/get_exercise_by_id")
 @login_required
 def get_exercise_by_id():
-    exercise_id = request.args.get('id')
+    exercise_id = request.args.get("id")
     if not exercise_id:
         return response_json(ERR_EXERCISE_ID_EMPTY)
 
@@ -246,6 +246,59 @@ def get_exercise_record():
         return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
 
 
+@app.route("/api/edit_exercise_record", methods=["GET", "POST"])
+@login_required
+def edit_exercise_record():
+    if request.method == "POST":
+        # Get record details id
+        record_details_id = request.form["record_details_id"]
+        exercise_id = request.form["exercise_id"]
+        if not exercise_id:
+            return response_json(ERR_EXERCISE_ID_EMPTY)
+        # Get exercise type
+        exercise_type = get_exercise_type_by_id(get_db(), exercise_id)
+        if not exercise_type:
+            return response_json(ERR_EXERCISE_ID_INVALID)
+        # According exercise type, get needed information
+        if exercise_type == EXERCISE_TYPE_STRENGTH: # strength exercise
+            # Exercise sets
+            exercise_sets_str = request.form["exercise_sets"]
+            if not exercise_sets_str:
+                return response_json(ERR_EXERCISE_SETS_EMPTY)
+            try:
+                exercise_sets = exercises.parse_exercise_sets(exercise_sets_str)
+            except Exception as e:
+                print(e)
+                return response_json(ERR_EXERCISE_SETS_INVALID)
+            if len(exercise_sets) == 0:
+                return response_json(ERR_EXERCISE_SETS_EMPTY)
+            # Update to database
+            try:
+                status_code = exercises.change_to_strength_exercise_record(get_db(), record_details_id, exercise_id,
+                                                                           exercise_sets)
+            except Exception as e:
+                print(e)
+                status_code = ERR_INTERNAL
+        elif exercise_type == EXERCISE_TYPE_CARDIO: # cardio exercise
+            exercise_hours = request.form["exercise_hours"]
+            exercise_minutes = request.form["exercise_minutes"]
+            exercise_seconds = request.form["exercise_seconds"]
+            # Update to database
+            try:
+                status_code = exercises.change_to_cardio_exercise_record(get_db(), record_details_id, exercise_id,
+                                                                         exercise_hours, exercise_minutes,
+                                                                         exercise_seconds)
+            except Exception as e:
+                print(e)
+                status_code = ERR_INTERNAL
+        else:
+            return response_json(ERR_EXERCISE_TYPE_INVALID)
+
+        return response_json(status_code)
+    else:
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+
+
 @app.route("/api/append_strength_exercise", methods=["GET", "POST"])
 @login_required
 def append_strength_exercise():
@@ -268,36 +321,19 @@ def append_strength_exercise():
 
         # Exercise sets
         exercise_sets_str = request.form['exercise_sets']
+
+        # Exercise sets
+        exercise_sets_str = request.form["exercise_sets"]
         if not exercise_sets_str:
             return response_json(ERR_EXERCISE_SETS_EMPTY)
         try:
-            exercise_set_dicts = json.loads(exercise_sets_str)
+            exercise_sets = exercises.parse_exercise_sets(exercise_sets_str)
         except Exception as e:
             print(e)
             return response_json(ERR_EXERCISE_SETS_INVALID)
 
-        if len(exercise_set_dicts) == 0:
+        if len(exercise_sets) == 0:
             return response_json(ERR_EXERCISE_SETS_EMPTY)
-
-        exercise_sets = exercises.ExerciseSets()
-        try:
-            for exercise_set_dict in exercise_set_dicts:
-                set_order = int(exercise_set_dict["set_order"])
-                set_weight = int(exercise_set_dict["set_weight"])
-                set_reps = int(exercise_set_dict["set_reps"])
-                status = exercises.is_exercise_set_valid(set_order, set_weight, set_reps)
-                if status != ERR_SUCCESS:
-                    return response_json(status)
-
-                exercise_set_same_order = exercise_sets.find_by_order(set_order)
-                if exercise_set_same_order:
-                    exercise_set_same_order.sub_sets.append_set(set_order, set_weight, set_reps)
-                else:
-                    exercise_sets.append_set(set_order, set_weight, set_reps)
-            exercise_sets.sort_by_order()
-        except Exception as e:
-            print(e)
-            return response_json(ERR_EXERCISE_SETS_INVALID)
 
         status_code = exercises.append_strength_exercise_record(get_db(), user_id, record_date,
                                                                 exercise_id, exercise_sets)
@@ -342,8 +378,8 @@ def append_cardio_exercise():
         # Exercise seconds
         exercise_seconds = request.form["exercise_seconds"]
 
-        status_code = exercises.appen_cardio_exercise_record(get_db(), user_id, record_date, exercise_id,
-                                                             exercise_hours, exercise_minutes, exercise_seconds)
+        status_code = exercises.append_cardio_exercise_record(get_db(), user_id, record_date, exercise_id,
+                                                              exercise_hours, exercise_minutes, exercise_seconds)
         if status_code == ERR_SUCCESS:
             record_id = get_record_id(get_db(), user_id, record_date)
             exercise_orders = get_record_details_orders(get_db(), record_id)
@@ -364,8 +400,15 @@ def record():
     if request.method == "POST":
         return render_template("record.html")
     else:
+        # Get record date
+        record_date_request = request.args.get("record_date")
+        record_date = exercises.exercise_date_str_to_date(record_date_request)
+        if not record_date:
+            record_date = datetime.datetime.now()
+        record_date_str = exercises.exercise_date_to_date_str(record_date)
+        # Get strength muscle groups
         strength_muscle_groups = sorted(get_strength_muscle_groups(get_db()))
-
+        # Get strength exercise names and ids
         if len(strength_muscle_groups) > 0:
             strength_exercise_ids_names = get_exercise_ids_names_by_muscle_group(get_db(), strength_muscle_groups[0])
             sorted(strength_exercise_ids_names, key=lambda token: token[1])
@@ -379,7 +422,7 @@ def record():
             strength_exercise_names = []
         if len(strength_exercise_ids) != len(strength_exercise_names):
             raise Exception("count of exercise ids and names are not equal")
-
+        # Get cardio exercise names and ids
         cardio_exercise_ids_names = get_cardio_exercise_ids_names(get_db())
         sorted(cardio_exercise_ids_names, key=lambda token: token[1])
         cardio_exercise_ids = []
@@ -387,8 +430,9 @@ def record():
         for token in cardio_exercise_ids_names:
             cardio_exercise_ids.append(token[0])
             cardio_exercise_names.append(token[1])
-
-        return render_template("record.html", strength_muscle_groups=strength_muscle_groups,
+        return render_template("record.html",
+                               record_date=record_date_str,
+                               strength_muscle_groups=strength_muscle_groups,
                                strength_exercise_ids=strength_exercise_ids,
                                strength_exercise_names=strength_exercise_names,
                                cardio_exercise_ids=cardio_exercise_ids,

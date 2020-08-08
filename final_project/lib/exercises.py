@@ -1,5 +1,6 @@
 import datetime
 import sqlite3
+import json
 from .error_codes import *
 from .fitbook_db import *
 
@@ -32,6 +33,22 @@ class ExerciseSets:
             return self.sets[idx]
         else:
             raise IndexError
+
+    def __setitem__(self, key, value):
+        if not isinstance(value, ExerciseSet):
+            raise Exception("Value must be ExerciseSet")
+        if key <= len(self.sets):
+            self.sets[key] = value
+        else:
+            raise IndexError
+
+    def __len__(self):
+        return len(self.sets)
+
+    def append(self, value):
+        if not isinstance(value, ExerciseSet):
+            raise Exception("Value must be ExerciseSet")
+        self.sets.append(value)
 
     def append_set(self, order, weight, reps):
         if not (isinstance(order, int) and isinstance(weight, int) and isinstance(reps, int)):
@@ -128,8 +145,15 @@ def exercise_date_str_to_date(date_str):
         return None
     try:
         return datetime.datetime.strptime(date_str, EXERCISE_DATE_FMT)
-    except:
+    except Exception as e:
+        print(e)
         return None
+
+
+def exercise_date_to_date_str(date):
+    if not isinstance(date, datetime.datetime):
+        return ""
+    return date.strftime(EXERCISE_DATE_FMT)
 
 
 def is_exercise_set_valid(set_order, set_weight, set_reps):
@@ -158,6 +182,32 @@ def is_exercise_set_valid(set_order, set_weight, set_reps):
         return ERR_EXERCISE_SET_REPS_INVALID
 
     return ERR_SUCCESS
+
+
+def is_exercise_time_valid(exercise_hours, exercise_minutes, exercise_seconds):
+    # Check exercise hours
+    if not isinstance(exercise_hours, int):
+        return False
+    if (0 > exercise_hours) or (exercise_hours > 99):
+        return False
+
+    # Check exercise minutes
+    if not isinstance(exercise_minutes, int):
+        return False
+    if (0 > exercise_minutes) or (exercise_minutes > 59):
+        return False
+
+    # Check exercise seconds
+    if not isinstance(exercise_seconds, int):
+        return False
+    if (0 > exercise_seconds) or (exercise_seconds > 59):
+        return False
+
+    # Check all
+    if (exercise_hours == 0) and (exercise_minutes == 0) and (exercise_seconds == 0):
+        return False
+
+    return True
 
 
 def append_strength_exercise_record(db, user_id, record_date, exercise_id, exercise_sets):
@@ -239,8 +289,8 @@ def append_strength_exercise_record(db, user_id, record_date, exercise_id, exerc
     return ERR_SUCCESS
 
 
-def appen_cardio_exercise_record(db, user_id, record_date, exercise_id, exercise_hours,
-                                 exercise_minutes, exercise_seconds):
+def append_cardio_exercise_record(db, user_id, record_date, exercise_id, exercise_hours,
+                                  exercise_minutes, exercise_seconds):
     if not isinstance(db, sqlite3.Connection):
         raise Exception("db is not a database")
 
@@ -267,8 +317,6 @@ def appen_cardio_exercise_record(db, user_id, record_date, exercise_id, exercise
             exercise_hours = int(exercise_hours)
         except:
             return ERR_EXERCISE_HOURS_INVALID
-        if (0 > exercise_hours) or (exercise_hours > 99):
-            return ERR_EXERCISE_HOURS_INVALID
     else:
         exercise_hours = 0
 
@@ -277,8 +325,6 @@ def appen_cardio_exercise_record(db, user_id, record_date, exercise_id, exercise
         try:
             exercise_minutes = int(exercise_minutes)
         except:
-            return ERR_EXERCISE_MINUTES_INVALID
-        if (0 > exercise_minutes) or (exercise_minutes > 59):
             return ERR_EXERCISE_MINUTES_INVALID
     else:
         exercise_minutes = 0
@@ -289,13 +335,11 @@ def appen_cardio_exercise_record(db, user_id, record_date, exercise_id, exercise
             exercise_seconds = int(exercise_seconds)
         except:
             return ERR_EXERCISE_SECONDS_INVALID
-        if (0 > exercise_seconds) or (exercise_seconds > 59):
-            return ERR_EXERCISE_SECONDS_INVALID
     else:
         exercise_seconds = 0
 
-    if (exercise_hours == 0) and (exercise_minutes == 0) and (exercise_seconds == 0):
-        return ERR_EXERCISE_TIME_NOT_EXIST
+    if not is_exercise_time_valid(exercise_hours, exercise_minutes, exercise_seconds):
+        return ERR_EXERCISE_TIME_INVALID
 
     # Exercise type
     exercise_type = get_exercise_type_by_id(db, exercise_id)
@@ -403,7 +447,7 @@ def get_exercise_record(db, record_details_id):
 
 def get_exercise_records(db, user_id, record_date):
     if not isinstance(db, sqlite3.Connection):
-        raise Exception("database manager is not FitBookDB")
+        raise Exception("db is not a database")
     if not user_id:
         raise Exception("Cannot get exercise records by empty user id")
     if not isinstance(record_date, datetime.datetime):
@@ -435,3 +479,125 @@ def get_exercise_records(db, user_id, record_date):
         exercise_record = get_exercise_record(db, record_details_id)
         exercise_records.append(exercise_record)
     return exercise_records
+
+
+def parse_exercise_sets(exercise_sets_json_str):
+    if not (exercise_sets_json_str, str):
+        raise Exception("Invalid type of exercise_sets_json_str")
+
+    exercise_sets = ExerciseSets()
+    exercise_set_dicts = json.loads(exercise_sets_json_str)
+    for exercise_set_dict in exercise_set_dicts:
+        set_order = int(exercise_set_dict["set_order"])
+        set_weight = int(exercise_set_dict["set_weight"])
+        set_reps = int(exercise_set_dict["set_reps"])
+        status = is_exercise_set_valid(set_order, set_weight, set_reps)
+        if status != ERR_SUCCESS:
+            raise Exception("Invalid set info(order: %s, weight: %s, reps: %s" % (set_order, set_weight, set_reps))
+
+        exercise_set_same_order = exercise_sets.find_by_order(set_order)
+        if exercise_set_same_order:
+            exercise_set_same_order.sub_sets.append_set(set_order, set_weight, set_reps)
+        else:
+            exercise_sets.append_set(set_order, set_weight, set_reps)
+    exercise_sets.sort_by_order()
+    return exercise_sets
+
+
+def change_to_strength_exercise_record(db, record_details_id, exercise_id, exercise_sets):
+    # Check arguments
+    if not isinstance(db, sqlite3.Connection):
+        raise Exception("db is not a database")
+    if not record_details_id_exist(db, record_details_id):
+        raise Exception("record_details_id(%s) does not exist" % record_details_id)
+    if not exercise_id_exist(db, exercise_id):
+        raise Exception("exercise_id(%s) does not exist" % exercise_id)
+    exercise_type = get_exercise_type_by_id(db, exercise_id)
+    if not exercise_type == EXERCISE_TYPE_STRENGTH:
+        raise Exception("exercise_id(%s) is not a strength exercise" % exercise_id)
+    if not isinstance(exercise_sets, ExerciseSets):
+        raise Exception("exercise_sets argument is not ExerciseSets")
+    # Delete original record details
+    org_exercise_id = get_exercise_id_by_record_details_id(db, record_details_id)
+    if org_exercise_id <= 0:
+        raise Exception("Cannot get original exercise id by record details id(%s)" % record_details_id)
+    org_exercise_type = get_exercise_type_by_id(db, org_exercise_id)
+    if not org_exercise_type:
+        raise Exception("Cannot get original exercise type by original exercise id(%s)" % org_exercise_id)
+    if org_exercise_type == EXERCISE_TYPE_STRENGTH:
+        delete_strength_record_by_rdid(db, record_details_id)
+    elif org_exercise_type == EXERCISE_TYPE_CARDIO:
+        delete_cardio_record_by_rdid(db, record_details_id)
+    else:
+        raise Exception("Unknown original exercise type(%s)" % org_exercise_type)
+    # Update record details
+    update_record_details_exercise(db, record_details_id, exercise_id)
+    cur_order = 1
+    for exercise_set in exercise_sets:
+        set_weight = exercise_set.weight
+        set_reps = exercise_set.reps
+        cur_sub_order = 1
+        add_strength_record(db, record_details_id, cur_order, cur_sub_order, set_weight, set_reps)
+        for sub_set in exercise_set.sub_sets:
+            sub_weight = sub_set.weight
+            sub_reps = sub_set.reps
+            cur_sub_order += 1
+            add_strength_record(db, record_details_id, cur_order, cur_sub_order, sub_weight, sub_reps)
+        cur_order += 1
+    return ERR_SUCCESS
+
+
+def change_to_cardio_exercise_record(db, record_details_id, exercise_id, exercise_hours, exercise_minutes, exercise_seconds):
+    # Check arguments
+    if not isinstance(db, sqlite3.Connection):
+        raise Exception("db is not a database")
+    if not record_details_id_exist(db, record_details_id):
+        raise Exception("record_details_id(%s) does not exist" % record_details_id)
+    if not exercise_id_exist(db, exercise_id):
+        raise Exception("exercise_id(%s) does not exist" % exercise_id)
+    exercise_type = get_exercise_type_by_id(db, exercise_id)
+    if not exercise_type == EXERCISE_TYPE_CARDIO:
+        raise Exception("exercise_id(%s) is not a cardio exercise" % exercise_id)
+    if exercise_hours:
+        try:
+            exercise_hours = int(exercise_hours)
+        except Exception as e:
+            print(e)
+            return ERR_EXERCISE_HOURS_INVALID
+    else:
+        exercise_hours = 0
+    if exercise_minutes:
+        try:
+            exercise_minutes = int(exercise_minutes)
+        except Exception as e:
+            print(e)
+            return ERR_EXERCISE_MINUTES_INVALID
+    else:
+        exercise_minutes = 0
+    if exercise_seconds:
+        try:
+            exercise_seconds = int(exercise_seconds)
+        except Exception as e:
+            print(e)
+            return ERR_EXERCISE_SECONDS_INVALID
+    else:
+        exercise_seconds = 0
+    if not is_exercise_time_valid(exercise_hours, exercise_minutes, exercise_seconds):
+        return ERR_EXERCISE_TIME_INVALID
+    # Delete original record details
+    org_exercise_id = get_exercise_id_by_record_details_id(db, record_details_id)
+    if org_exercise_id <= 0:
+        raise Exception("Cannot get original exercise id by record details id(%s)" % record_details_id)
+    org_exercise_type = get_exercise_type_by_id(db, org_exercise_id)
+    if not org_exercise_type:
+        raise Exception("Cannot get original exercise type by original exercise id(%s)" % org_exercise_id)
+    if org_exercise_type == EXERCISE_TYPE_STRENGTH:
+        delete_strength_record_by_rdid(db, record_details_id)
+    elif org_exercise_type == EXERCISE_TYPE_CARDIO:
+        delete_cardio_record_by_rdid(db, record_details_id)
+    else:
+        raise Exception("Unknown original exercise type(%s)" % org_exercise_type)
+    # Update record details
+    update_record_details_exercise(db, record_details_id, exercise_id)
+    add_cardio_record(db, record_details_id, exercise_hours, exercise_minutes, exercise_seconds)
+    return ERR_SUCCESS

@@ -112,6 +112,14 @@ def user_id_exist(db, user_id):
 ##################################################
 # exercises table
 ##################################################
+def exercise_id_exist(db, exercise_id):
+    sql = "SELECT * FROM %s WHERE %s=?" % (EXERCISES_TABLE, EXERCISES_ID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (exercise_id,))
+    rows = cur.fetchall()
+    return len(rows) > 0
+
+
 def get_exercise_names(db):
     sql = "SELECT %s FROM %s" % (EXERCISES_NAME_COL, EXERCISES_TABLE)
     cur = db.cursor()
@@ -279,6 +287,17 @@ def get_muscle_groups(db):
 ##################################################
 # records table
 ##################################################
+def update_record_details_exercise(db, rdid, eid):
+    if not record_details_id_exist(db, rdid):
+        raise Exception("Record details id(%s) does not exist" % rdid)
+    sql = "UPDATE %s SET %s=? WHERE %s=?" % (RECORD_DETAILS_TABLE, RECORD_DETAILS_EID_COL, RECORD_DETAILS_ID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (eid, rdid))
+    if cur.rowcount < 1:
+        raise Exception("Update exercise(%s) to record details id(%s) failed" % (eid, rdid))
+    db.commit()
+
+
 def add_record_id(db, uid, date):
     if db.get_record_id(uid, date) > 0:
         raise Exception("Record id already exist!")
@@ -451,6 +470,15 @@ def add_strength_record(db, rdid, set_order, inset_order, weight, reps):
     db.commit()
 
 
+def delete_strength_record_by_rdid(db, rdid):
+    sql = "DELETE FROM %s WHERE %s=?" % (STRENGTH_RECORDS_TABLE, STRENGTH_RECORDS_RDID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rdid,))
+    if cur.rowcount < 1:
+        raise Exception("Delete strength record by record details id(%s) failed" % rdid)
+    db.commit()
+
+
 def get_strength_record_id(db, rdid, set_order, inset_order, weight, reps):
     sql = "SELECT %s FROM %s WHERE %s=? AND %s=? AND %s=? AND %s=? AND %s=?" % \
           (STRENGTH_RECORDS_ID_COL, STRENGTH_RECORDS_TABLE, STRENGTH_RECORDS_RDID_COL,
@@ -543,6 +571,15 @@ def add_cardio_record(db, rdid, hours, minutes, seconds):
     if not cur.lastrowid:
         raise Exception("Add cardio record (rdid:%s, hours: %s, minutes: %s, seconds: %s) to database failed" %
                         (rdid, hours, minutes, seconds))
+    db.commit()
+
+
+def delete_cardio_record_by_rdid(db, rdid):
+    sql = "DELETE FROM %s WHERE %s=?" % (CARDIO_RECORDS_TABLE, CARDIO_RECORDS_RDID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rdid,))
+    if cur.rowcount < 1:
+        raise Exception("Delete cardio record by record details id(%s) failed" % rdid)
     db.commit()
 
 
