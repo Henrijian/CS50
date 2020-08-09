@@ -1,0 +1,19 @@
+{% extends "record_exercise.html" %}
+{% block card_body %}
+<table class="table table-hover table-dark table-sm m-0">
+    <thead>
+        <tr>
+            <th scope="col">Hrs</th>
+            <th scope="col">Mins</th>
+            <th scope="col">Secs</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th class="hours_cell" scope="row" >{{ exercise_hours }}</th>
+            <td class="minutes_cell">{{ exercise_minutes }}</td>
+            <td class="seconds_cell">{{ exercise_seconds }}</td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}

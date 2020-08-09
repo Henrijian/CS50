@@ -86,19 +86,15 @@ var show_closed_collapse_toggler = function(toggled_id) {
 var refresh_collapse_toggler = function() {
     var togglers = $("[data-toggle='collapse']");
     if (togglers.length == 0) {
-        return null;
+        return;
     }
     togglers.each(function(index) {
-        var collapse_id = $(this).attr("href");
-        if (!collapse_id) {
+        const collapse_href = $(this).attr("href");
+        if (!collapse_href) {
             return;
         }
-        collapse_id = collapse_id.replace("#", "");
-        var collapse_state = $(this).attr("aria-expanded");
-        if (!collapse_state) {
-            return;
-        }
-        if (collapse_state == "false") {
+        const collapse_id = collapse_href.replace("#", "");
+        if ($(this).hasClass("collapsed")) {
             show_closed_collapse_toggler(collapse_id);
         } else {
             show_opened_collpase_toggler(collapse_id);
@@ -137,12 +133,12 @@ $(".datepicker").datepicker(
 });
 
 // bind collapse toggler to switch icon in different state
-$(".collapse").on("show.bs.collapse", function(event) {
+$(document).on("show.bs.collapse", ".collapse", function(event) {
     on_show_collapse_event(event);
 });
 
 // bind collapse toggler to switch icon in different state
-$(".collapse").on("hide.bs.collapse", function(event) {
+$(document).on("hide.bs.collapse", ".collapse", function(event) {
     on_close_collpase_event(event);
 });
 

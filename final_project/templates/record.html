@@ -21,12 +21,15 @@
         </div>
 
         <h5 class="card-title">Date</h5>
-        <input id="record_exercise_date" type="text" readonly="" class="form-control datepicker" name="date" placeholder="yyyy-mm-dd" style="border-radius: 0px;">
+        <input id="record_date" type="text" readonly="" class="form-control datepicker" name="date" placeholder="yyyy-mm-dd" value="{{ record_date_str }}" style="border-radius: 0px;">
 
         <hr class="my-3 sep">
 
         <h5 class="card-title">Exercises</h5>
         <div id="record_exercises">
+            {% for exercise_record_template in exercise_record_templates %}
+                {{ exercise_record_template|safe }}
+            {% endfor %}
         </div>
 
         <hr class="my-1 sep">
@@ -64,11 +67,11 @@
                                 <div class="form-group">
                                     <label for="strength_exercise_select" class="text-primary">EXERCISE</label>
                                     <select id="strength_exercise_select" class="custom-select custom-select-sm">
-                                        {% for strength_exercise_name in strength_exercise_names %}
+                                        {% for strength_exercise_id_name in strength_exercise_ids_names %}
                                             {% if loop.index0 == 0 %}
-                                            <option value="{{ strength_exercise_ids[loop.index0] }}" selected>{{ strength_exercise_name }}</option>
+                                            <option value="{{ strength_exercise_id_name[0] }}" selected>{{ strength_exercise_id_name[1] }}</option>
                                             {% else %}
-                                            <option value="{{ strength_exercise_ids[loop.index0] }}">{{ strength_exercise_name }}</option>
+                                            <option value="{{ strength_exercise_id_name[0] }}">{{ strength_exercise_id_name[1] }}</option>
                                             {% endif %}
                                         {% endfor %}
                                     </select>
@@ -78,7 +81,7 @@
                                     <label class="text-primary">SETS</label>
                                     <div id="exercise_sets">
                                     </div>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-block p-1 my-1 btn_add_set" sets-container="exercise_sets">
+                                    <button id="btn_append_exercise_sets" type="button" class="btn btn-outline-secondary btn-sm btn-block p-1 my-1">
                                         Add Set
                                     </button>
                                 </div>
@@ -88,11 +91,11 @@
                                 <div class="form-group">
                                     <label for="cardio_exercise_select" class="text-primary">EXERCISE</label>
                                     <select id="cardio_exercise_select" class="custom-select custom-select-sm">
-                                        {% for cardio_exercise_name in cardio_exercise_names %}
+                                        {% for cardio_exercise_id_name in cardio_exercise_ids_names %}
                                             {% if loop.index0 == 0 %}
-                                            <option value="{{ cardio_exercise_ids[loop.index0] }}" selected>{{ cardio_exercise_name }}</option>
+                                            <option value="{{ cardio_exercise_id_name[0] }}" selected>{{ cardio_exercise_id_name[1] }}</option>
                                             {% else %}
-                                            <option value="{{ cardio_exercise_ids[loop.index0] }}">{{ cardio_exercise_name }}</option>
+                                            <option value="{{ cardio_exercise_id_name[0] }}">{{ cardio_exercise_id_name[1] }}</option>
                                             {% endif %}
                                         {% endfor %}
                                     </select>

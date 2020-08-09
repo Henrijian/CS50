@@ -73,8 +73,7 @@ class ExerciseSets:
     def data(self):
         data = []
         for set in self.sets:
-            set_data = set.data()
-            data.append(set_data)
+            data.append(set.data())
         return data
 
     def sort_by_order(self):

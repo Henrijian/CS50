@@ -299,7 +299,7 @@ def update_record_details_exercise(db, rdid, eid):
 
 
 def add_record_id(db, uid, date):
-    if db.get_record_id(uid, date) > 0:
+    if get_record_id(db, uid, date) > 0:
         raise Exception("Record id already exist!")
 
     if not isinstance(date, datetime.datetime):

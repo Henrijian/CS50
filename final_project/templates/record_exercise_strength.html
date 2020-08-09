@@ -1,0 +1,31 @@
+{% extends "record_exercise.html" %}
+{% block card_body %}
+<table class="table table-hover table-dark table-sm m-0">
+    <thead>
+        <tr>
+            <th scope="col">Set</th>
+            <th scope="col">Weight(kg)</th>
+            <th scope="col">Reps</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set ns = namespace(cur_order=1) %}
+
+        {% for exercise_set in exercise_sets %}
+        <tr>
+            <th class="order_cell" scope="row">{{ ns.cur_order }}</th>
+            <td class="weight_cell">{{ exercise_set["weight"] }}</td>
+            <td class="reps_cell">{{ exercise_set["reps"] }}</td>
+        </tr>
+            {% for sub_set in exercise_set["sub_sets"] %}
+            <tr>
+                <th class="order_cell" scope="row"></th>
+                <td class="weight_cell">{{ sub_set["weight"] }}</td>
+                <td class="reps_cell">{{ sub_set["reps"] }}</td>
+            </tr>
+            {% endfor %}
+        {% set ns.cur_order = ns.cur_order + 1 %}
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

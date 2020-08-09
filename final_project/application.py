@@ -18,16 +18,6 @@ app = Flask(__name__)
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
-
-# Ensure responses aren't cached
-@app.after_request
-def after_request(response):
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Expires"] = 0
-    response.headers["Pragma"] = "no-cache"
-    return response
-
-
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_FILE_DIR"] = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
@@ -54,32 +44,27 @@ def close_connection(exception):
         db.close()
 
 
+# Ensure responses aren't cached
+@app.after_request
+def after_request(response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Expires"] = 0
+    response.headers["Pragma"] = "no-cache"
+    return response
+
+
 # Make sure API key is set
 if not os.environ.get("API_KEY"):
     raise RuntimeError("API_KEY not set")
 
+
+##################################################
+# Pages
+##################################################
 @app.route("/")
 @login_required
 def index():
     return render_template("index.html")
-
-
-@app.route("/api/register_check", methods=["GET", "POST"])
-def register_check():
-    if request.method == "POST":
-        # Get register information
-        username = request.form.get("username")
-        password = request.form.get("password")
-        confirmation = request.form.get("confirmation")
-
-        # Check register information is in valid format
-        status_code = is_register_info_valid(get_db(), username, password, confirmation)
-        if status_code != ERR_SUCCESS:
-            return response_json(status_code)
-
-        return response_json(ERR_SUCCESS)
-    else:
-        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -107,23 +92,6 @@ def register():
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("register.html")
-
-
-@app.route("/api/login_check", methods=["GET", "POST"])
-def login_check():
-    if request.method == "POST":
-        # Get log-in information
-        username = request.form.get("username")
-        password = request.form.get("password")
-
-        # Check log-in information
-        status_code = login_user(get_db(), username, password)
-        if status_code != ERR_SUCCESS:
-            return response_json(status_code)
-
-        return response_json(ERR_SUCCESS)
-    else:
-        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -165,9 +133,101 @@ def logout():
     return redirect("/")
 
 
-@app.route("/api/get_exercises")
+@app.route("/record", methods=["GET", "POST"])
 @login_required
-def get_exercises():
+def record():
+    if request.method == "POST":
+        return render_template("record.html")
+    else:
+        # Get user ID
+        user_id = session["user_id"]
+        # Get record date
+        record_date_request = request.args.get("record_date", None)
+        if record_date_request:
+            record_date = exercises.exercise_date_str_to_date(record_date_request)
+            if not record_date:
+                raise Exception("Request date is invalid: %s" % record_date_request)
+        else:
+            record_date = datetime.datetime.now()
+        record_date_str = exercises.exercise_date_to_date_str(record_date)
+        # Get strength muscle groups
+        strength_muscle_groups = sorted(get_strength_muscle_groups(get_db()))
+        # Get strength exercise names and ids
+        strength_exercise_ids_names = get_exercise_ids_names_by_muscle_group(get_db(), strength_muscle_groups[0])
+        sorted(strength_exercise_ids_names, key=lambda token: token[1])
+        # Get Cardio exercise names and ids
+        cardio_exercise_ids_names = get_cardio_exercise_ids_names(get_db())
+        sorted(cardio_exercise_ids_names, key=lambda token: token[1])
+        # Get exercise records
+        exercise_records = exercises.get_exercise_records(get_db(), user_id, record_date)
+        # Get templates of exercise records
+        exercise_record_templates = []
+        for exercise_record in exercise_records:
+            exercise_type = exercise_record.exercise_type
+            record_details_id = exercise_record.record_details_id
+            if exercise_type == EXERCISE_TYPE_STRENGTH:
+                exercise_record_template = get_strength_exercise_record_template(record_details_id)
+            elif exercise_type == EXERCISE_TYPE_CARDIO:
+                exercise_record_template = get_cardio_exercise_record_template(record_details_id)
+            else:
+                raise Exception("Unknown exercise type* %s" % exercise_type)
+            exercise_record_templates.append(exercise_record_template)
+        return render_template("record.html",
+                               record_date_str=record_date_str,
+                               strength_muscle_groups=strength_muscle_groups,
+                               strength_exercise_ids_names=strength_exercise_ids_names,
+                               cardio_exercise_ids_names=cardio_exercise_ids_names,
+                               exercise_record_templates=exercise_record_templates)
+
+
+def error_handler(e):
+    """Handle error"""
+    if not isinstance(e, HTTPException):
+        e = InternalServerError()
+    return apology(e.name, e.code)
+
+
+##################################################
+# API
+##################################################
+@app.route("/api/login_check", methods=["GET", "POST"])
+def login_check():
+    if request.method == "POST":
+        # Get log-in information
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        # Check log-in information
+        status_code = login_user(get_db(), username, password)
+        if status_code != ERR_SUCCESS:
+            return response_json(status_code)
+
+        return response_json(ERR_SUCCESS)
+    else:
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+
+
+@app.route("/api/register_check", methods=["GET", "POST"])
+def register_check():
+    if request.method == "POST":
+        # Get register information
+        username = request.form.get("username")
+        password = request.form.get("password")
+        confirmation = request.form.get("confirmation")
+
+        # Check register information is in valid format
+        status_code = is_register_info_valid(get_db(), username, password, confirmation)
+        if status_code != ERR_SUCCESS:
+            return response_json(status_code)
+
+        return response_json(ERR_SUCCESS)
+    else:
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+
+
+@app.route("/api/get_muscle_group_exercises")
+@login_required
+def get_muscle_group_exercises():
     muscle_group = request.args.get('muscle_group')
     if not muscle_group:
         return response_json(ERR_MUSCLE_GROUP_EMPTY)
@@ -184,9 +244,9 @@ def get_exercises():
     return response_json(ERR_SUCCESS, result=exercise_ids_names)
 
 
-@app.route("/api/get_exercise_by_id")
+@app.route("/api/get_exercise_name")
 @login_required
-def get_exercise_by_id():
+def get_exercise_name():
     exercise_id = request.args.get("id")
     if not exercise_id:
         return response_json(ERR_EXERCISE_ID_EMPTY)
@@ -208,23 +268,36 @@ def get_exercise_by_id():
 @login_required
 def get_record():
     if request.method == "POST":
+        # Get user id
         user_id = session["user_id"]
-
-        # Exercise date
+        # Get record date
         record_date_str = request.form["record_date"]
         if not record_date_str:
             return response_json(ERR_EXERCISE_DATE_EMPTY)
         record_date = exercises.exercise_date_str_to_date(record_date_str)
         if not record_date:
             return response_json(ERR_EXERCISE_DATE_INVALID)
-
+        # Get exercise records
         try:
             exercise_records = exercises.get_exercise_records(get_db(), user_id, record_date)
         except Exception as e:
             print(e)
             return response_json(ERR_INTERNAL)
-
-        result = {"exercise_records": exercise_records.data()}
+        # Get templates of exercise records
+        exercise_record_templates = []
+        for exercise_record in exercise_records:
+            exercise_type = exercise_record.exercise_type
+            record_details_id = exercise_record.record_details_id
+            if exercise_type == EXERCISE_TYPE_STRENGTH:
+                exercise_record_template = get_strength_exercise_record_template(record_details_id)
+            elif exercise_type == EXERCISE_TYPE_CARDIO:
+                exercise_record_template = get_cardio_exercise_record_template(record_details_id)
+            else:
+                raise Exception("Unknown exercise type* %s" % exercise_type)
+            exercise_record_templates.append(exercise_record_template)
+        exercise_records_template = "\n".join(exercise_record_templates)
+        # Organize result
+        result = {"exercise_records": exercise_records_template}
         return response_json(ERR_SUCCESS, result=result)
     else:
         return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
@@ -242,6 +315,99 @@ def get_exercise_record():
             return response_json(ERR_INTERNAL)
 
         return response_json(ERR_SUCCESS, result=exercise_record.data())
+    else:
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+
+
+@app.route("/api/get_strength_exercise_record", methods=["GET", "POST"])
+@login_required
+def get_strength_exercise_record():
+    if request.method == "POST":
+        # Get record details id
+        record_details_id = request.form["record_details_id"]
+        if not record_details_id_exist(get_db(), record_details_id):
+            return response_json(ERR_RECORD_DETAILS_ID_NOT_EXIST)
+        # Get strength exercise record template
+        try:
+            exercise_record_template = get_strength_exercise_record_template(record_details_id)
+        except Exception as e:
+            print(e)
+            return response_json(ERR_INTERNAL)
+        result = {"exercise_record_html": exercise_record_template}
+        return response_json(ERR_SUCCESS, result=result)
+    else:
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+
+
+@app.route("/api/get_cardio_exercise_record", methods=["GET", "POST"])
+@login_required
+def get_cardio_exercise_record():
+    if request.method == "POST":
+        # Get record details id
+        record_details_id = request.form["record_details_id"]
+        if not record_details_id_exist(get_db(), record_details_id):
+            return response_json(ERR_RECORD_DETAILS_ID_NOT_EXIST)
+        # Get strength exercise record template
+        try:
+            exercise_record_template = get_cardio_exercise_record_template(record_details_id)
+        except Exception as e:
+            print(e)
+            return response_json(ERR_INTERNAL)
+        result = {"exercise_record_html": exercise_record_template}
+        return response_json(ERR_SUCCESS, result=result)
+    else:
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+
+
+@app.route("/api/get_exercise_set", methods=["GET", "POST"])
+def get_exercise_set():
+    if request.method == "POST":
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+    else:
+        set_order = request.args.get("set_order", type=int, default=1)
+        set_weight = request.args.get("set_weight", type=int, default=0)
+        set_reps = request.args.get("set_reps", type=int, default=0)
+        is_sub_set = request.args.get("is_sub_set") == "true"
+
+        exercise_set_template = get_exercise_set_template(set_order, set_weight, set_reps, is_sub_set)
+        result = {"exercise_set_template": exercise_set_template}
+        return response_json(ERR_SUCCESS, result=result)
+
+
+@app.route("/api/get_exercise_sets", methods=["GET", "POST"])
+@login_required
+def get_exercise_sets():
+    if request.method == "POST":
+        # Get record details id
+        record_details_id = request.form["record_details_id"]
+        if not record_details_id_exist(get_db(), record_details_id):
+            return response_json(ERR_RECORD_DETAILS_ID_NOT_EXIST)
+        # Get exercise record
+        try:
+            exercise_record = exercises.get_exercise_record(get_db(), record_details_id)
+        except Exception as e:
+            print(e)
+            return response_json(ERR_INTERNAL)
+        # Get exercise sets templates
+        exercise_sets_htmls = []
+        exercise_sets = exercise_record.exercise_sets
+        cur_order = 1
+        for exercise_set in exercise_sets:
+            set_order = cur_order
+            set_weight = exercise_set.weight
+            set_reps = exercise_set.reps
+            set_html = get_exercise_set_template(set_order, set_weight, set_reps, False)
+            exercise_sets_htmls.append(set_html)
+            for sub_set in exercise_set.sub_sets:
+                sub_order = set_order
+                sub_weight = sub_set.weight
+                sub_reps = sub_set.reps
+                sub_html = get_exercise_set_template(sub_order, sub_weight, sub_reps, True)
+                exercise_sets_htmls.append(sub_html)
+            cur_order += 1
+        exercise_sets_html = "\n".join(exercise_sets_htmls)
+        result = {"exercise_sets_html": exercise_sets_html}
+        return response_json(ERR_SUCCESS, result=result)
     else:
         return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
 
@@ -299,9 +465,9 @@ def edit_exercise_record():
         return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
 
 
-@app.route("/api/append_strength_exercise", methods=["GET", "POST"])
+@app.route("/api/append_strength_exercise_record", methods=["GET", "POST"])
 @login_required
-def append_strength_exercise():
+def append_strength_exercise_record():
     if request.method == "POST":
         # user id
         user_id = session["user_id"]
@@ -342,18 +508,16 @@ def append_strength_exercise():
             exercise_orders = get_record_details_orders(get_db(), record_id)
             exercise_order = max(exercise_orders)
             record_details_id = get_record_details_id(get_db(), record_id, exercise_id, exercise_order)
-            exercise_name = get_exercise_name_by_id(get_db(), exercise_id)
-            return response_json(status_code, result={"record_details_id": record_details_id,
-                                                      "exercise_name": exercise_name})
+            return response_json(status_code, result={"record_details_id": record_details_id})
         else:
             return response_json(status_code)
     else:
         return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
 
 
-@app.route("/api/append_cardio_exercise", methods=["GET", "POST"])
+@app.route("/api/append_cardio_exercise_record", methods=["GET", "POST"])
 @login_required
-def append_cardio_exercise():
+def append_cardio_exercise_record():
     if request.method == "POST":
         # user id
         user_id = session["user_id"]
@@ -385,65 +549,78 @@ def append_cardio_exercise():
             exercise_orders = get_record_details_orders(get_db(), record_id)
             exercise_order = max(exercise_orders)
             record_details_id = get_record_details_id(get_db(), record_id, exercise_id, exercise_order)
-            exercise_name = get_exercise_name_by_id(get_db(), exercise_id)
-            return response_json(status_code, result={"record_details_id": record_details_id,
-                                                      "exercise_name": exercise_name})
+            return response_json(status_code, result={"record_details_id": record_details_id})
         else:
             return response_json(status_code)
     else:
         return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
 
 
-@app.route("/record", methods=["GET", "POST"])
-@login_required
-def record():
-    if request.method == "POST":
-        return render_template("record.html")
-    else:
-        # Get record date
-        record_date_request = request.args.get("record_date")
-        record_date = exercises.exercise_date_str_to_date(record_date_request)
-        if not record_date:
-            record_date = datetime.datetime.now()
-        record_date_str = exercises.exercise_date_to_date_str(record_date)
-        # Get strength muscle groups
-        strength_muscle_groups = sorted(get_strength_muscle_groups(get_db()))
-        # Get strength exercise names and ids
-        if len(strength_muscle_groups) > 0:
-            strength_exercise_ids_names = get_exercise_ids_names_by_muscle_group(get_db(), strength_muscle_groups[0])
-            sorted(strength_exercise_ids_names, key=lambda token: token[1])
-            strength_exercise_ids = []
-            strength_exercise_names = []
-            for token in strength_exercise_ids_names:
-                strength_exercise_ids.append(token[0])
-                strength_exercise_names.append(token[1])
-        else:
-            strength_exercise_ids = []
-            strength_exercise_names = []
-        if len(strength_exercise_ids) != len(strength_exercise_names):
-            raise Exception("count of exercise ids and names are not equal")
-        # Get cardio exercise names and ids
-        cardio_exercise_ids_names = get_cardio_exercise_ids_names(get_db())
-        sorted(cardio_exercise_ids_names, key=lambda token: token[1])
-        cardio_exercise_ids = []
-        cardio_exercise_names = []
-        for token in cardio_exercise_ids_names:
-            cardio_exercise_ids.append(token[0])
-            cardio_exercise_names.append(token[1])
-        return render_template("record.html",
-                               record_date=record_date_str,
-                               strength_muscle_groups=strength_muscle_groups,
-                               strength_exercise_ids=strength_exercise_ids,
-                               strength_exercise_names=strength_exercise_names,
-                               cardio_exercise_ids=cardio_exercise_ids,
-                               cardio_exercise_names=cardio_exercise_names)
+##################################################
+# Templates
+##################################################
+def get_strength_exercise_record_template(record_details_id):
+    if not record_details_id_exist(get_db(), record_details_id):
+        raise Exception("Record details id does not exist")
+    # get exercise record
+    exercise_record = exercises.get_exercise_record(get_db(), record_details_id)
+    # get exercise type
+    exercise_type = exercise_record.exercise_type
+    # check exercise type
+    if not exercise_type == EXERCISE_TYPE_STRENGTH:
+        raise Exception("Specified exercise is not a strength exercise")
+    # get exercise name
+    exercise_name = exercise_record.exercise_name
+    # get exercise sets
+    exercise_sets = exercise_record.exercise_sets.data()
+    # check exercise sets
+    if len(exercise_sets) == 0:
+        raise Exception("Required strength exercise does not have any set")
+    return render_template("record_exercise_strength.html",
+                           record_details_id=record_details_id,
+                           exercise_name=exercise_name,
+                           exercise_sets=exercise_sets)
 
 
-def error_handler(e):
-    """Handle error"""
-    if not isinstance(e, HTTPException):
-        e = InternalServerError()
-    return apology(e.name, e.code)
+def get_cardio_exercise_record_template(record_details_id):
+    if not record_details_id_exist(get_db(), record_details_id):
+        raise Exception("Record details id does not exist")
+    # get exercise record
+    exercise_record = exercises.get_exercise_record(get_db(), record_details_id)
+    # get exercise type
+    exercise_type = exercise_record.exercise_type
+    # check exercise type
+    if not exercise_type == EXERCISE_TYPE_CARDIO:
+        raise Exception("Specified exercise is not a cardio exercise")
+    # get exercise name
+    exercise_name = exercise_record.exercise_name
+    # get exercise time
+    exercise_time = exercise_record.exercise_time
+    exercise_hours = exercise_time.hours
+    exercise_minutes = exercise_time.minutes
+    exercise_seconds = exercise_time.seconds
+    return render_template("record_exercise_cardio.html",
+                           record_details_id=record_details_id,
+                           exercise_name=exercise_name,
+                           exercise_hours=exercise_hours,
+                           exercise_minutes=exercise_minutes,
+                           exercise_seconds=exercise_seconds)
+
+
+def get_exercise_set_template(set_order=0, set_weight=0, set_reps=0, is_sub_set=False):
+    if not isinstance(set_order, int):
+        raise Exception("set_order type error")
+    if not isinstance(set_weight, int):
+        raise Exception("set_weight type error")
+    if not isinstance(set_reps, int):
+        raise Exception("set_reps type error")
+    if not isinstance(is_sub_set, bool):
+        raise Exception("is_sub_set type error")
+    return render_template("exercise_set.html",
+                           set_order=set_order,
+                           set_weight=set_weight,
+                           set_reps=set_reps,
+                           is_sub_set=is_sub_set)
 
 
 # Listen for errors

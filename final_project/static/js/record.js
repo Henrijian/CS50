@@ -30,6 +30,8 @@ const BTN_SAVE_EXERCISE_ID = "btn_save_exercise";
 
 const BTN_APPEND_RECORD_EXERCISES_ID = "btn_append_record_exercises";
 
+const BTN_APPEND_EXERCISE_SETS_ID = "btn_append_exercise_sets";
+
 const STRENGTH_EXERCISE_TAB_ID = "strength_exercise_tab";
 
 const CARDIO_EXERCISE_TAB_ID = "cardio_exercise_tab";
@@ -40,327 +42,13 @@ const CARDIO_EXERCISE_TAB_PANE_ID = "cardio_exercise_tab_pane";
 
 const RECORD_EXERCISES_ID = "record_exercises";
 
-const RECORD_EXERCISE_DATE_ID = "record_exercise_date";
+const RECORD_DATE_ID = "record_date";
 
 const RECORD_LOADING_ID = "record_loading";
 
 //==================================================
 // functions definitions
 //==================================================
-
-// get set element
-var get_set_element = function(set_order, set_weight = 0, set_reps = 0, is_sub_set = false) {
-        // create set item
-        const set_item = document.createElement("div");
-        set_item.classList.add("input-group", "input-group-sm", "row", "m-0");
-        set_item.setAttribute("set_order", set_order);
-        if (is_sub_set) {
-            set_item.classList.add("exercise_sub_set");
-        } else {
-            set_item.classList.add("exercise_set");
-        }
-
-        // append set header to set item
-        const set_header = document.createElement("div");
-        set_item.appendChild(set_header);
-        set_header.classList.add("input-group-prepend", "col-sm-2", "p-0", "d-flex");
-
-        const set_header_span = document.createElement("span");
-        set_header.appendChild(set_header_span);
-        set_header_span.classList.add("input-group-text", "flex-fill");
-        set_header_span.textContent = "Set";
-
-        const set_header_bold = document.createElement("b");
-        set_header_span.appendChild(set_header_bold);
-        set_header_bold.classList.add("set_order_text", set_order);
-        set_header_bold.textContent = set_order;
-        if (is_sub_set) {
-            set_header_span.style.visibility = "hidden";
-        }
-
-        // append set weight input to set item
-        const weight_input = document.createElement("input");
-        weight_input.classList.add("form-control", "text-right", "exercise_weight");
-        weight_input.type = "number";
-        weight_input.placeholder="weight";
-        weight_input.value = set_weight;
-        set_item.appendChild(weight_input);
-        const weight_input_append = document.createElement("div");
-        weight_input_append.classList.add("input-group-append");
-        set_item.appendChild(weight_input_append);
-        const weight_input_append_span = document.createElement("span");
-        weight_input_append_span.classList.add("input-group-text");
-        weight_input_append_span.textContent = "kg";
-        weight_input_append.appendChild(weight_input_append_span);
-
-
-        // append set reps input to set item
-        const reps_input = document.createElement("input");
-        reps_input.classList.add("form-control", "text-right", "exercise_reps");
-        reps_input.type = "number";
-        reps_input.placeholder="repetitions";
-        reps_input.value = set_reps;
-        set_item.appendChild(reps_input);
-        const reps_input_append = document.createElement("div");
-        reps_input_append.classList.add("input-group-append");
-        set_item.appendChild(reps_input_append);
-        const reps_input_append_span = document.createElement("span");
-        reps_input_append_span.classList.add("input-group-text");
-        reps_input_append_span.textContent = "reps";
-        reps_input_append.appendChild(reps_input_append_span);
-
-
-        // append action dropdown button to set item
-        const action_button_container = document.createElement("div");
-        action_button_container.classList.add("input-group-append");
-        set_item.appendChild(action_button_container);
-
-        // dropdown button
-        const action_button = document.createElement("button");
-        action_button.classList.add("input-group-text", "btn", "btn-outline-primary", "dropdown-toggle", "px-1");
-        action_button.type = "button";
-        action_button.setAttribute("data-toggle", "dropdown");
-        action_button_container.appendChild(action_button);
-
-        // dropdown menu
-        const action_menu = document.createElement("div");
-        action_menu.classList.add("dropdown-menu");
-        action_button_container.appendChild(action_menu);
-
-        // add set menu item
-        const menu_item_add = document.createElement("a");
-        menu_item_add.classList.add("dropdown-item", "btn_add_sub_set");
-        menu_item_add.href = "#";
-        menu_item_add.textContent = "Add";
-        action_menu.appendChild(menu_item_add);
-
-        // delete set menu item
-        const menu_item_delete = document.createElement("a");
-        if (is_sub_set) {
-            menu_item_delete.classList.add("dropdown-item", "btn_delete_sub_set");
-        } else {
-            menu_item_delete.classList.add("dropdown-item", "btn_delete_set");
-        }
-        menu_item_delete.href = "#";
-        menu_item_delete.textContent = "Delete";
-        action_menu.appendChild(menu_item_delete);
-
-        return set_item;
-}
-
-// get exercise record card element
-var get_exercise_record_card_element = function(record_details_id, exercise_name) {
-    // create exercise card
-    const exercise_card = document.createElement("div");
-    exercise_card.classList.add("card", "exercise_record");
-    exercise_card.setAttribute("record_details_id", record_details_id);
-
-    // card header
-    const card_header = document.createElement("div");
-    exercise_card.appendChild(card_header);
-    card_header.classList.add("card-header", "px-2");
-
-    // card header link
-    const card_header_link = document.createElement("a");
-    card_header.appendChild(card_header_link);
-    card_header_link.setAttribute("data-toggle", "collapse");
-    card_header_link.setAttribute("aria-expanded", "false");
-    const card_body_id = "exercose_record_" + record_details_id;
-    card_header_link.setAttribute("href", "#" + card_body_id);
-    card_header_link.innerHTML = "<i class=\"fas fa-caret-down collapse-open pr-1\"></i>"
-                                +"<i class=\"fas fa-caret-up collapse-close pr-1\"></i>"
-                                +"<span class=\"exercise_record_name\">"+exercise_name+"</span>";
-
-    // dropdown menu
-    const dropdown_container = document.createElement("div");
-    card_header.appendChild(dropdown_container);
-    dropdown_container.classList.add("dropdown", "float-right");
-    // dropdown button
-    const dropdown_button = document.createElement("button");
-    dropdown_container.appendChild(dropdown_button);
-    dropdown_button.classList.add("btn", "btn-outline-primary", "btn-sm", "m-0", "p-0", "px-3");
-    dropdown_button.setAttribute("style", "border-color: rgba(0,0,0,0);");
-    dropdown_button.setAttribute("type", "button");
-    dropdown_button.setAttribute("data-toggle", "dropdown");
-    // dropdown icon
-    const dropdown_icon = document.createElement("i");
-    dropdown_button.appendChild(dropdown_icon);
-    dropdown_icon.classList.add("fas", "fa-ellipsis-h");
-    // dropdown menu
-    const dropdown_menu = document.createElement("div");
-    dropdown_container.appendChild(dropdown_menu);
-    dropdown_menu.classList.add("dropdown-menu");
-    // dropdown edit button
-    const edit_button = document.createElement("a");
-    dropdown_menu.appendChild(edit_button);
-    edit_button.classList.add("btn", "dropdown-item");
-    edit_button.setAttribute("type", "button");
-    edit_button.setAttribute("data-toggle", "modal");
-    edit_button.setAttribute("onclick", "show_edit_exercise_modal(" + record_details_id + ")");
-    edit_button.textContent = "Edit";
-    // dropdown delete button
-    const delete_button = document.createElement("a");
-    dropdown_menu.appendChild(delete_button);
-    delete_button.classList.add("btn", "dropdown-item");
-    delete_button.setAttribute("type", "button");
-    delete_button.setAttribute("href", "#");
-    delete_button.textContent = "Delete";
-
-    // collapse body
-    const collapse_body = document.createElement("div");
-    exercise_card.appendChild(collapse_body);
-    collapse_body.setAttribute("id", card_body_id);
-    collapse_body.classList.add("collapse");
-    $(collapse_body).on("show.bs.collapse", function(event) {
-        on_show_collapse_event(event);
-    });
-    $(collapse_body).on("hide.bs.collapse", function(event) {
-        on_close_collpase_event(event);
-    });
-    // card body
-    const card_body = document.createElement("div");
-    collapse_body.appendChild(card_body);
-    card_body.classList.add("card-body", "p-0");
-
-    return exercise_card;
-}
-
-// change exercise record card header name
-var change_exercise_record_card_header_name = function(record_details_id, exercise_name) {
-    const exercise_record_element = $("#" + RECORD_EXERCISES_ID + " .exercise_record[record_details_id='"+record_details_id+"']");
-    if (exercise_record_element.length == 0) {
-        console.log("cannot find exercise record element");
-        return false;
-    }
-    const exercise_name_label = exercise_record_element.find(".exercise_record_name");
-    if (exercise_name_label.length == 0) {
-        console.log("cannot find exercise name label in record element");
-        return false;
-    }
-    exercise_name_label.html(exercise_name);
-    return true;
-}
-
-// get strength exercise element
-var get_strength_exercise_element = function(record_details_id, exercise_name, exercise_sets) {
-    // get card element
-    const card_element = get_exercise_record_card_element(record_details_id, exercise_name);
-    // get card body
-    const card_body = $(card_element).find(".card-body").get(0);
-    // sets table
-    const sets_table = document.createElement("table");
-    card_body.appendChild(sets_table);
-    sets_table.classList.add("table", "table-hover", "table-dark", "table-sm", "m-0");
-    // sets table header
-    const table_header = document.createElement("thead");
-    sets_table.appendChild(table_header);
-    // header row
-    const header_row = document.createElement("tr");
-    table_header.appendChild(header_row);
-    // headers
-    const set_col_header = document.createElement("th");
-    header_row.appendChild(set_col_header);
-    set_col_header.setAttribute("scope", "col");
-    set_col_header.textContent = "Set";
-
-    const weight_col_header = document.createElement("th");
-    header_row.appendChild(weight_col_header);
-    weight_col_header.setAttribute("scope", "col");
-    weight_col_header.textContent = "Weight(kg)";
-
-    const reps_col_header = document.createElement("th");
-    header_row.appendChild(reps_col_header);
-    reps_col_header.setAttribute("scope", "col");
-    reps_col_header.textContent = "Reps";
-
-    // table body
-    const table_body = document.createElement("tbody");
-    sets_table.appendChild(table_body);
-
-    var set_order = "";
-    for (var i = 0; i < exercise_sets.length; i++) {
-        var set_token = exercise_sets[i];
-        var set_row = document.createElement("tr");
-        table_body.appendChild(set_row);
-
-        var set_order_cell = document.createElement("th");
-        set_row.appendChild(set_order_cell);
-        set_order_cell.setAttribute("scope", "row");
-        if (set_order != set_token["set_order"]) {
-            set_order_cell.textContent = set_token["set_order"];
-            set_order = set_token["set_order"];
-        }
-
-        var set_weight_cell = document.createElement("td");
-        set_row.appendChild(set_weight_cell);
-        set_weight_cell.classList.add("weight_cell");
-        set_weight_cell.textContent = set_token["set_weight"];
-
-        var set_reps_cell = document.createElement("td");
-        set_row.appendChild(set_reps_cell);
-        set_reps_cell.classList.add("reps_cell");
-        set_reps_cell.textContent = set_token["set_reps"];
-    }
-    return card_element;
-}
-
-// get cardio exercise element
-var get_cardio_exercise_element = function(record_details_id, exercise_name, exercise_hours, exercise_minutes, exercise_seconds) {
-    // get card element
-    const card_element = get_exercise_record_card_element(record_details_id, exercise_name);
-    // get card body
-    const card_body = $(card_element).find(".card-body").get(0);
-    // time table
-    const time_table = document.createElement("table");
-    card_body.appendChild(time_table);
-    time_table.classList.add("table", "table-hover", "table-dark", "table-sm", "m-0");
-    // sets table header
-    const table_header = document.createElement("thead");
-    time_table.appendChild(table_header);
-    // header row
-    const header_row = document.createElement("tr");
-    table_header.appendChild(header_row);
-    // headers
-    const hrs_col_header = document.createElement("th");
-    header_row.appendChild(hrs_col_header);
-    hrs_col_header.setAttribute("scope", "col");
-    hrs_col_header.textContent = "Hrs";
-
-    const mins_col_header = document.createElement("th");
-    header_row.appendChild(mins_col_header);
-    mins_col_header.setAttribute("scope", "col");
-    mins_col_header.textContent = "Mins";
-
-    const secs_col_header = document.createElement("th");
-    header_row.appendChild(secs_col_header);
-    secs_col_header.setAttribute("scope", "col");
-    secs_col_header.textContent = "Secs";
-
-    // table body
-    const table_body = document.createElement("tbody");
-    time_table.appendChild(table_body);
-    // table row
-    const time_row = document.createElement("tr");
-    table_body.appendChild(time_row);
-    // hours cell
-    const hours_cell = document.createElement("th");
-    time_row.appendChild(hours_cell);
-    hours_cell.setAttribute("scope", "row");
-    hours_cell.classList.add("hours_cell");
-    hours_cell.textContent = exercise_hours;
-    // minutes cell
-    const minutes_cell = document.createElement("td");
-    time_row.appendChild(minutes_cell);
-    minutes_cell.classList.add("minutes_cell");
-    minutes_cell.textContent = exercise_minutes;
-    // seconds cell
-    const seconds_cell = document.createElement("td");
-    time_row.appendChild(seconds_cell);
-    seconds_cell.classList.add("seconds_cell");
-    seconds_cell.textContent = exercise_seconds;
-
-    return card_element;
-}
 
 // change set item order
 var set_set_item_order = function(set_item, set_order) {
@@ -469,7 +157,7 @@ var show_strength_edit_exercise_modal = function(record_details_id, muscle_group
         return false;
     }
     $.ajax({
-        url: "/api/get_exercises",
+        url: "/api/get_muscle_group_exercises",
         type: "GET",
         data: {muscle_group: muscle_group},
         dataType: "json",
@@ -504,21 +192,32 @@ var show_strength_edit_exercise_modal = function(record_details_id, muscle_group
         }
     });
     // update exercise sets
-    const exercise_sets_container = document.getElementById(EXERCISE_SETS_ID);
-    if (!exercise_sets_container) {
-        console.log("cannot get exercise_sets_container");
+    const sets_container = document.getElementById(EXERCISE_SETS_ID);
+    if (!sets_container) {
+        console.log("cannot get exercise sets container");
         return false;
     }
-    var cur_set_order = 0;
-    $.each(exercise_sets, function(idx, exercise_set) {
-        const set_order = exercise_set["set_order"];
-        const set_weight = exercise_set["set_weight"];
-        const set_reps = exercise_set["set_reps"];
-        const set_item = get_set_element(set_order, set_weight, set_reps, cur_set_order == set_order);
-        if (cur_set_order != set_order) {
-            cur_set_order = set_order;
+    $.ajax({
+        url: "/api/get_exercise_sets",
+        type: "POST",
+        data: {record_details_id: record_details_id},
+        dataType: "json",
+        beforeSend:function() {
+            toggle_on_loading_progress_bar_exercise_modal();
+        },
+        success:function(data) {
+            if (data["error_code"] == 0) {
+                const result = JSON.parse(data["result"]);
+                const exercise_sets_html_string = result["exercise_sets_html"];
+                const exercise_sets_element = $.parseHTML(exercise_sets_html_string);
+                $(sets_container).append(exercise_sets_element);
+            } else {
+                alert_record_exercise_card(data["error_message"]);
+            }
+        },
+        complete:function() {
+            toggle_off_loading_progress_bar_exercise_modal();
         }
-        exercise_sets_container.appendChild(set_item);
     });
     $("#" + MODAL_ADD_EXERCISE_ID).modal("show");
 }
@@ -794,36 +493,9 @@ var toggle_off_loading_progress_bar_exercise_modal = function() {
     loading_progress_bar.classList.add("d-none");
 }
 
-// load information to add exercise modal
-var load_add_exercise_modal = function(exercise_date, exercise_order) {
-    // add exercise record to server
-    $.ajax({
-        url: "/api/get_exercise_record",
-        type: "POST",
-        data: {exercise_date: exercise_date,
-               exercise_order: exercise_order},
-        dataType: "json",
-        beforeSend:function() {
-            toggle_on_loading_progress_bar_exercise_modal();
-        },
-        success:function(data) {
-            if (data["error_code"] == 0) {
-                console.log(data["result"]);
-            } else {
-                console.log(data["error_message"]);
-                alert_add_exercise_modal(data["error_message"]);
-                initialize_add_exercise_modal();
-            }
-        },
-        complete:function() {
-            toggle_off_loading_progress_bar_exercise_modal();
-        }
-    });
-}
-
 // get record date
 var get_record_date = function() {
-    const input_exercise_date = $("#" + RECORD_EXERCISE_DATE_ID).get(0);
+    const input_exercise_date = $("#" + RECORD_DATE_ID).get(0);
     if (!input_exercise_date) {
         return null;
     }
@@ -866,7 +538,39 @@ var get_exercise_sets = function(exercise_sets_data) {
 // event binding
 //==================================================
 
-// bind add exercise button onClick event
+// bind muscle group selector onChange event to refresh exercises select element list
+$("select.muscle_group_select").on("change", function() {
+    var exercises_select_id = $(this).attr("muscle-group-exercises");
+    if (!exercises_select_id) {
+        return false;
+    }
+    var exercises_select = $("#" + exercises_select_id);
+    if (!exercises_select) {
+        return false;
+    }
+    $.ajax({
+        url: "/api/get_muscle_group_exercises",
+        type: "GET",
+        data: {muscle_group: $(this).val()},
+        dataType: "json",
+        success:function( data ) {
+            if (data["error_code"] == 0) {
+                var exercise_ids_names = $.parseJSON(data["result"]);
+                exercises_select.empty();
+                $.each(exercise_ids_names, function(index, value) {
+                    const exercise_option = document.createElement("option");
+                    exercise_option.setAttribute("value", value[0]);
+                    exercise_option.textContent = value[1];
+                    exercises_select.append(exercise_option);
+                });
+            } else {
+                form_alert(data["error_message"]);
+            }
+        }
+    });
+});
+
+// bind append exercise button onClick event
 $("#" + BTN_APPEND_RECORD_EXERCISES_ID).on("click", function() {
     // get exercise date
     if (!get_record_date()) {
@@ -876,14 +580,14 @@ $("#" + BTN_APPEND_RECORD_EXERCISES_ID).on("click", function() {
     initialize_add_exercise_modal();
 });
 
-// bind .btn_add_exercise button onClick event,
-// to check exercise record before add it to main container
+// bind add exercise button onClick event to check exercise record before add it to main container
 $("#" + BTN_ADD_EXERCISE_ID).on("click", function() {
     const record_exercises = document.getElementById(RECORD_EXERCISES_ID);
     if (!record_exercises) {
         console.log("exercise records container does not exist");
         return false;
     }
+    // get active exercise tab
     const strength_tab_active = $("#" + STRENGTH_EXERCISE_TAB_PANE_ID + ".active").length > 0;
     // get exercise date
     const exercise_date = get_record_date();
@@ -936,7 +640,7 @@ $("#" + BTN_ADD_EXERCISE_ID).on("click", function() {
 
         // add exercise record to server
         $.ajax({
-            url: "/api/append_strength_exercise",
+            url: "/api/append_strength_exercise_record",
             type: "POST",
             data: {exercise_date: exercise_date,
                    exercise_id: exercise_id,
@@ -949,11 +653,30 @@ $("#" + BTN_ADD_EXERCISE_ID).on("click", function() {
                 if (data["error_code"] == 0) {
                     const result = JSON.parse(data["result"]);
                     const record_details_id = result["record_details_id"];
-                    const exercise_name = result["exercise_name"];
-                    const record_exercise_card = get_strength_exercise_element(record_details_id, exercise_name, exercise_sets);
-                    record_exercises.append(record_exercise_card);
-                    refresh_collapse_toggler();
-                    $("#" + MODAL_ADD_EXERCISE_ID).modal('hide')
+                    $.ajax({
+                        url: "/api/get_strength_exercise_record",
+                        type: "POST",
+                        data: {record_details_id: record_details_id},
+                        dataType: "json",
+                        beforeSend:function() {
+                            toggle_on_loading_progress_bar_exercise_modal();
+                        },
+                        success:function(data) {
+                            if (data["error_code"] == 0) {
+                                const result = JSON.parse(data["result"]);
+                                const exercise_record_html_string = result["exercise_record_html"];
+                                const exercise_record_element = $.parseHTML(exercise_record_html_string);
+                                $(record_exercises).append(exercise_record_element);
+                                refresh_collapse_toggler();
+                                $("#" + MODAL_ADD_EXERCISE_ID).modal('hide');
+                            } else {
+                                alert_add_exercise_modal(data["error_message"]);
+                            }
+                        },
+                        complete:function() {
+                            toggle_off_loading_progress_bar_exercise_modal();
+                        }
+                    });
                 } else {
                     alert_add_exercise_modal(data["error_message"]);
                 }
@@ -980,7 +703,7 @@ $("#" + BTN_ADD_EXERCISE_ID).on("click", function() {
 
         // add exercise record to server
         $.ajax({
-            url: "/api/append_cardio_exercise",
+            url: "/api/append_cardio_exercise_record",
             type: "POST",
             data: {exercise_date: exercise_date,
                    exercise_id: exercise_id,
@@ -995,11 +718,30 @@ $("#" + BTN_ADD_EXERCISE_ID).on("click", function() {
                 if (data["error_code"] == 0) {
                     const result = JSON.parse(data["result"]);
                     const record_details_id = result["record_details_id"];
-                    const exercise_name = result["exercise_name"];
-                    const record_exercise_card = get_cardio_exercise_element(record_details_id, exercise_name, exercise_hours, exercise_minutes, exercise_seconds);
-                    record_exercises.append(record_exercise_card);
-                    refresh_collapse_toggler();
-                    $("#" + MODAL_ADD_EXERCISE_ID).modal('hide')
+                    $.ajax({
+                        url: "/api/get_cardio_exercise_record",
+                        type: "POST",
+                        data: {record_details_id: record_details_id},
+                        dataType: "json",
+                        beforeSend:function() {
+                            toggle_on_loading_progress_bar_exercise_modal();
+                        },
+                        success:function(data) {
+                            if (data["error_code"] == 0) {
+                                const result = JSON.parse(data["result"]);
+                                const exercise_record_html_string = result["exercise_record_html"];
+                                const exercise_record_element = $.parseHTML(exercise_record_html_string);
+                                $(record_exercises).append(exercise_record_element);
+                                refresh_collapse_toggler();
+                                $("#" + MODAL_ADD_EXERCISE_ID).modal('hide');
+                            } else {
+                                alert_add_exercise_modal(data["error_message"]);
+                            }
+                        },
+                        complete:function() {
+                            toggle_off_loading_progress_bar_exercise_modal();
+                        }
+                    });
                 } else {
                     alert_add_exercise_modal(data["error_message"]);
                 }
@@ -1011,8 +753,8 @@ $("#" + BTN_ADD_EXERCISE_ID).on("click", function() {
     }
 });
 
-// bind datepicker onChangeDate event
-$("#" + RECORD_EXERCISE_DATE_ID).datepicker().on("changeDate", function(e){
+// bind datepicker onChangeDate event to change record in container
+$("#" + RECORD_DATE_ID).datepicker().on("changeDate", function(e){
     initialize_exercise_records();
     const exercise_records_element = document.getElementById(RECORD_EXERCISES_ID);
     if (!exercise_records_element) {
@@ -1033,27 +775,7 @@ $("#" + RECORD_EXERCISE_DATE_ID).datepicker().on("changeDate", function(e){
             if (data["error_code"] == 0) {
                 const result = JSON.parse(data["result"]);
                 const exercise_records = result["exercise_records"];
-                for (i = 0; i < exercise_records.length; i++)
-                {
-                    var exercise_record = exercise_records[i];
-                    var record_details_id = exercise_record["record_details_id"];
-                    var exercise_type = exercise_record["exercise_type"];
-                    var exercise_name = exercise_record["exercise_name"];
-                    if (exercise_type == "strength") {
-                        var exercise_sets = get_exercise_sets(exercise_record["exercise_sets"]);
-                        var exercise_record_element = get_strength_exercise_element(record_details_id, exercise_name, exercise_sets);
-                    } else if (exercise_type == "cardio") {
-                        var exercise_time = exercise_record["exercise_time"];
-                        var exercise_hours = exercise_time["hours"];
-                        var exercise_minutes = exercise_time["minutes"];
-                        var exercise_seconds = exercise_time["seconds"];
-                        var exercise_record_element = get_cardio_exercise_element(record_details_id, exercise_name, exercise_hours, exercise_minutes, exercise_seconds);
-                    } else {
-                        console.log("unknown exercise type: " + exercise_type);
-                        continue;
-                    }
-                    exercise_records_element.appendChild(exercise_record_element);
-                }
+                exercise_records_element.innerHTML = exercise_records;
                 refresh_collapse_toggler();
             } else {
                 alert_record_exercise_card(data["error_message"]);
@@ -1065,108 +787,109 @@ $("#" + RECORD_EXERCISE_DATE_ID).datepicker().on("changeDate", function(e){
     });
 });
 
-// bind .muscle_group_select select element onChange event to get exercises list from server,
-// then refresh exercises select element list
-$(function() {
-    $("select.muscle_group_select").on("change", function() {
-        var exercises_select_id = $(this).attr("muscle-group-exercises");
-        if (!exercises_select_id) {
-            return false;
-        }
-        var exercises_select = $("#" + exercises_select_id);
-        if (!exercises_select) {
-            return false;
-        }
-        $.ajax({
-            url: "/api/get_exercises",
-            type: "GET",
-            data: {muscle_group: $(this).val()},
-            dataType: "json",
-            success:function( data ) {
-                if (data["error_code"] == 0) {
-                    var exercise_ids_names = $.parseJSON(data["result"]);
-                    exercises_select.empty();
-                    $.each(exercise_ids_names, function(index, value) {
-                        const exercise_option = document.createElement("option");
-                        exercise_option.setAttribute("value", value[0]);
-                        exercise_option.textContent = value[1];
-                        exercises_select.append(exercise_option);
-                    });
-                } else {
-                    form_alert(data["error_message"]);
-                }
+// bind add exercise set button onClick event to append set item in sets container
+$("#" + BTN_APPEND_EXERCISE_SETS_ID).on("click", function() {
+    const sets_container = $("#" + EXERCISE_SETS_ID).get(0);
+    if (!sets_container) {
+        console.log("cannot get sets container");
+        return false;
+    }
+    const sets_count = $(sets_container).children(".exercise_set").length;
+    const set_order = sets_count + 1;
+    // get exercise set element
+    $.ajax({
+        url: "/api/get_exercise_set",
+        type: "GET",
+        data: {set_order: set_order,
+               set_weight: 0,
+               set_reps: 0,
+               is_sub_set: false},
+        dataType: "json",
+        beforeSend:function() {
+            toggle_on_loading_progress_bar_record();
+        },
+        success:function(data) {
+            if (data["error_code"] == 0) {
+                const result = JSON.parse(data["result"]);
+                const exercise_set_html_string = result["exercise_set_template"];
+                const exercise_set_element = $.parseHTML(exercise_set_html_string);
+                $(sets_container).append(exercise_set_element);
+            } else {
+                alert_record_exercise_card(data["error_message"]);
             }
-        });
+        },
+        complete:function() {
+            toggle_off_loading_progress_bar_record();
+        }
     });
 });
 
-// bound .btn_add_set button element onClick event to append set into the container
-$(function() {
-    $("body").on("click", ".btn_add_set", function() {
-        var sets_container_id = $(this).attr("sets-container");
-        if (!sets_container_id) {
-            return false;
-        }
-        var sets_container = $("#" + sets_container_id);
-        if (!sets_container) {
-            return false;
-        }
-        const sets_count = sets_container.children(".exercise_set").length;
-        const set_order = sets_count + 1;
-        const set_item = get_set_element(set_order, 0, 0, false);
-        sets_container.append(set_item);
-    });
-});
-
-// bind .btn_add_sub_set element onClick event to append sub set item
-// after currently selected set item
-$(function() {
-    $("body").on("click", ".btn_add_sub_set", function() {
-        var set_items = $(this).parents(".exercise_set, .exercise_sub_set");
-        if (set_items.length == 0) {
-            return false;
-        }
-        const set_item = set_items[0];
-        const set_order = set_item.getAttribute("set_order");
-        const sub_set_item = get_set_element(set_order, 0, 0, true);
-        set_item.after(sub_set_item);
-    });
-});
-
-// bind .btn_delete_sub_set element onClick event to delete currently selected sub set item
-$(function() {
-    $("body").on("click", ".btn_delete_sub_set", function() {
-        var sub_set_items = $(this).parents(".exercise_sub_set");
-        if (sub_set_items.length == 0) {
-            return false;
-        }
-        const sub_set_item = sub_set_items[0];
-        sub_set_item.remove();
-    });
-});
-
-// bind .btn_delete_set element onClick event to delete currently selected set item and its sub set items
-$(function() {
-    $("body").on("click", ".btn_delete_set", function() {
-        var parent_set_items = $(this).parents(".exercise_set");
-        if (parent_set_items.length == 0) {
-            return false;
-        }
-        const set_item = parent_set_items[0];
-        const set_order_str = set_item.getAttribute("set_order");
-        const set_order = parseInt(set_order_str, 10);
-
-        // remove sub set items
-        $(set_item).siblings("[set_order='" + set_order_str + "']").remove();
-
-        // update set order after currently deleted set order
-        const set_items = $(set_item).siblings(".exercise_set, .exercise_sub_set");
-        set_items.each(function() {
-            var cur_set_order = parseInt($(this).attr("set_order"), 10);
-            if (cur_set_order > set_order) {
-                set_set_item_order($(this), cur_set_order - 1);
+// bind add exercise sub set button onClick event to append sub set item after currently selected set item
+$(document).on("click", ".btn_add_sub_set", function() {
+    var set_item = $(this).parents(".exercise_set, .exercise_sub_set").get(0);
+    if (!set_item) {
+        console.log("cannot get exercise set item");
+        return false;
+    }
+    const set_order = set_item.getAttribute("set_order");
+    // get exercise set element
+    $.ajax({
+        url: "/api/get_exercise_set",
+        type: "GET",
+        data: {set_order: set_order,
+               set_weight: 0,
+               set_reps: 0,
+               is_sub_set: true},
+        dataType: "json",
+        beforeSend:function() {
+            toggle_on_loading_progress_bar_record();
+        },
+        success:function(data) {
+            if (data["error_code"] == 0) {
+                const result = JSON.parse(data["result"]);
+                const exercise_set_html_string = result["exercise_set_template"];
+                const exercise_set_element = $.parseHTML(exercise_set_html_string);
+                $(set_item).after(exercise_set_element);
+            } else {
+                alert_record_exercise_card(data["error_message"]);
             }
-        });
-        $(set_item).remove();
+        },
+        complete:function() {
+            toggle_off_loading_progress_bar_record();
+        }
     });
+});
+
+// bind delete exercise sub set button onClick event to delete currently selected sub set item
+$(document).on("click", ".btn_delete_sub_set", function() {
+    var sub_set_item = $(this).parents(".exercise_sub_set").get(0);
+    if (!sub_set_item) {
+        console.log("cannot get exercise sub set item")
+        return false;
+    }
+    sub_set_item.remove();
+});
+
+// bind delete exercise set button onClick event to delete currently selected set item and its sub set items
+$(document).on("click", ".btn_delete_set", function() {
+    var set_item = $(this).parents(".exercise_set").get(0);
+    if (!set_item) {
+        console.log("cannot get exercise set item")
+        return false;
+    }
+    const set_order_str = set_item.getAttribute("set_order");
+    const set_order = parseInt(set_order_str, 10);
+
+    // remove sub set items
+    $(set_item).siblings("[set_order='" + set_order_str + "']").remove();
+
+    // update set order after currently deleted set order
+    const set_items = $(set_item).siblings(".exercise_set, .exercise_sub_set");
+    set_items.each(function() {
+        const each_set_order = parseInt($(this).attr("set_order"), 10);
+        if (each_set_order > set_order) {
+            set_set_item_order($(this), each_set_order - 1);
+        }
+    });
+    $(set_item).remove();
 });

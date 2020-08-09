@@ -1,10 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+<div class="card exercise_record" record_details_id="{{ record_details_id }}">
+    {% set card_id = "exercise_record_" + record_details_id|string %}
+    <div class="card-header px-2">
+        <a data-toggle="collapse" class="collapsed" href="#{{ card_id }}">
+            <i class="fas fa-caret-down collapse-open pr-1"></i>
+            <i class="fas fa-caret-up collapse-close pr-1"></i>
+            <span class="exercise_record_name">{{ exercise_name }}</span>
+        </a>
+        <div class="dropdown float-right">
+            <button class="btn btn-outline-primary btn-sm m-0 p-0 px-3" style="border-color: rgba(0,0,0,0);" type="button" data-toggle="dropdown">
+                <i class="fas fa-ellipsis-h"></i>
+            </button>
+            <div class="dropdown-menu">
+                <a class="btn dropdown-item" type="button" data-toggle="modal" onclick="show_edit_exercise_modal({{ record_details_id }})">
+                    Edit
+                </a>
+                <a class="btn dropdown-item" type="button" href="#">
+                    Delete
+                </a>
+            </div>
+        </div>
+    </div>
+    <div id="{{ card_id }}" class="collapse" style="">
+        <div class="card-body p-0">
+            {% block card_body %}{% endblock %}
+        </div>
+    </div>
+</div>

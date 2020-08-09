@@ -1,0 +1,37 @@
+{% if is_sub_set %}
+    {% set set_class = "exercise_sub_set" %}
+{% else %}
+    {% set set_class = "exercise_set" %}
+{% endif %}
+<div class="input-group input-group-sm row m-0 {{ set_class }}" set_order="{{ set_order }}">
+    {% if is_sub_set %}
+        {% set visibility = "hidden" %}
+    {% else %}
+        {% set visibility = "visible" %}
+    {% endif %}
+    <div class="input-group-prepend col-sm-2 p-0 d-flex" style="visibility: {{ visibility }};">
+        <span class="input-group-text flex-fill">
+            Set<b class="set_order_text">{{ set_order }}</b>
+        </span>
+    </div>
+    <input class="form-control text-right exercise_weight" type="number" placeholder="weight" value="{{ set_weight }}">
+    <div class="input-group-append">
+        <span class="input-group-text">kg</span>
+    </div>
+    <input class="form-control text-right exercise_reps" type="number" placeholder="repetitions" value="{{ set_reps }}">
+    <div class="input-group-append">
+        <span class="input-group-text">reps</span>
+    </div>
+    <div class="input-group-append">
+        <button class="input-group-text btn btn-outline-primary dropdown-toggle px-1" type="button" data-toggle="dropdown"></button>
+        <div class="dropdown-menu">
+            <a class="dropdown-item btn_add_sub_set" href="#">Add</a>
+            {% if is_sub_set %}
+                {% set delete_class = "btn_delete_sub_set" %}
+            {% else %}
+                {% set delete_class = "btn_delete_set" %}
+            {% endif %}
+            <a class="dropdown-item {{ delete_class }}" href="#">Delete</a>
+        </div>
+    </div>
+</div>
