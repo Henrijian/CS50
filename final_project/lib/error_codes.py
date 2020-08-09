@@ -38,6 +38,8 @@ ERR_EXERCISE_TYPE_INVALID = 36
 ERR_EXERCISE_HOURS_INVALID = 37
 ERR_EXERCISE_MINUTES_INVALID = 38
 ERR_EXERCISE_SECONDS_INVALID = 39
+ERR_DELETE_EXERCISE_RECORD_FAILED = 40
+
 
 def error_message(error_code):
     if error_code == ERR_SUCCESS:
@@ -116,5 +118,7 @@ def error_message(error_code):
         return "Exercise minutes is not valid"
     elif error_code == ERR_EXERCISE_SECONDS_INVALID:
         return "Exercise seconds is not valid"
+    elif error_code == ERR_DELETE_EXERCISE_RECORD_FAILED:
+        return "Delete exercise record failed"
     else:
         return "Unknown error"

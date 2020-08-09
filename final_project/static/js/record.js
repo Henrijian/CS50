@@ -410,7 +410,7 @@ var save_edit_exercise_modal = function(record_details_id) {
                 }
                 // add exercise record to server
                 $.ajax({
-                    url: "/api/get_record",
+                    url: "/api/get_exercise_records",
                     type: "POST",
                     data: {record_date: get_record_date()},
                     dataType: "json",
@@ -420,7 +420,7 @@ var save_edit_exercise_modal = function(record_details_id) {
                     success:function(data) {
                         if (data["error_code"] == 0) {
                             const result = JSON.parse(data["result"]);
-                            const exercise_records = result["exercise_records"];
+                            const exercise_records = result["exercise_records_html"];
                             initialize_exercise_records();
                             exercise_records_element.innerHTML = exercise_records;
                             refresh_collapse_toggler();
@@ -439,6 +439,59 @@ var save_edit_exercise_modal = function(record_details_id) {
         },
         complete:function() {
             toggle_off_loading_progress_bar_exercise_modal();
+        }
+    });
+}
+
+// delete exercise record
+var delete_exercise_record = function(record_details_id) {
+    // delete exercise record to server
+    $.ajax({
+        url: "/api/delete_exercise_record",
+        type: "POST",
+        data: {"record_details_id": record_details_id},
+        dataType: "json",
+        beforeSend:function() {
+            toggle_on_loading_progress_bar_record();
+        },
+        success:function(data) {
+            if (data["error_code"] == 0) {
+                const exercise_records_element = document.getElementById(RECORD_EXERCISES_ID);
+                if (!exercise_records_element) {
+                    console.log("exercise records container does not exist");
+                    return false;
+                }
+                // refresh exercise records from server
+                $.ajax({
+                    url: "/api/get_exercise_records",
+                    type: "POST",
+                    data: {record_date: get_record_date()},
+                    dataType: "json",
+                    beforeSend:function() {
+                        toggle_on_loading_progress_bar_exercise_modal();
+                    },
+                    success:function(data) {
+                        if (data["error_code"] == 0) {
+                            const result = JSON.parse(data["result"]);
+                            const exercise_records = result["exercise_records_html"];
+                            initialize_exercise_records();
+                            exercise_records_element.innerHTML = exercise_records;
+                            refresh_collapse_toggler();
+                            $("#" + MODAL_ADD_EXERCISE_ID).modal("hide");
+                        } else {
+                            alert_add_exercise_modal(data["error_message"]);
+                        }
+                    },
+                    complete:function() {
+                        toggle_off_loading_progress_bar_exercise_modal();
+                    }
+                });
+            } else {
+                alert_add_exercise_modal(data["error_message"]);
+            }
+        },
+        complete:function() {
+            toggle_off_loading_progress_bar_record();
         }
     });
 }

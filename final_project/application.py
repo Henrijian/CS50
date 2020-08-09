@@ -504,6 +504,25 @@ def edit_exercise_record():
         return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
 
 
+@app.route("/api/delete_exercise_record", methods=["GET", "POST"])
+@login_required
+def delete_exercise_record():
+    if request.method == "POST":
+        # Get record details id
+        record_details_id = request.form["record_details_id"]
+        if not record_details_id_exist(get_db(), record_details_id):
+            return response_json(ERR_RECORD_DETAILS_ID_NOT_EXIST)
+        # Delete record details
+        try:
+            delete_record_details(get_db(), record_details_id)
+        except Exception as e:
+            print(e)
+            return response_json(ERR_DELETE_EXERCISE_RECORD_FAILED)
+        return response_json(ERR_SUCCESS)
+    else:
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+
+
 @app.route("/api/append_strength_exercise_record", methods=["GET", "POST"])
 @login_required
 def append_strength_exercise_record():

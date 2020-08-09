@@ -354,6 +354,28 @@ def add_record_details(db, rid, eid, order):
     db.commit()
 
 
+def delete_record_details(db, rdid):
+    if not record_details_id_exist(db, rdid):
+        raise Exception("Record details does not exist")
+
+    # delete rdid from strength exercise record table
+    sql = "DELETE FROM %s WHERE %s=?" % (STRENGTH_RECORDS_TABLE, STRENGTH_RECORDS_RDID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rdid,))
+    db.commit()
+    # delete rdid from cardio exercise record table
+    sql = "DELETE FROM %s WHERE %s=?" % (CARDIO_RECORDS_TABLE, CARDIO_RECORDS_RDID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rdid,))
+    db.commit()
+    # delete rdid from record record details table
+    sql = "DELETE FROM %s WHERE %s=?" % (RECORD_DETAILS_TABLE, RECORD_DETAILS_ID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rdid,))
+    if cur.rowcount < 1:
+        raise Exception("Delete record details by record details id(%s) failed" % rdid)
+    db.commit()
+
 def get_record_details_id(db, rid, eid, order):
     sql = "SELECT %s FROM %s WHERE %s=? AND %s=? AND \"%s\"=?" % (RECORD_DETAILS_ID_COL, RECORD_DETAILS_TABLE,
                                                                   RECORD_DETAILS_RID_COL, RECORD_DETAILS_EID_COL,
