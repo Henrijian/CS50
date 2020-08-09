@@ -26,7 +26,7 @@
         <hr class="my-3 sep">
 
         <h5 class="card-title">Exercises</h5>
-        <div id="record_exercises">
+        <div id="exercise_records">
             {% for exercise_record_template in exercise_record_templates %}
                 {{ exercise_record_template|safe }}
             {% endfor %}
@@ -34,7 +34,7 @@
 
         <hr class="my-1 sep">
 
-        <button id="btn_append_record_exercises" type="button" class="btn btn-outline-secondary btn-sm btn-block" data-toggle="modal" data-target="#modal_add_exercise">Add Exercise</button>
+        <button id="btn_append_exercise_records" type="button" class="btn btn-outline-secondary btn-sm btn-block" data-toggle="modal" data-target="#modal_add_exercise">Add Exercise</button>
         <div id="modal_add_exercise" class="modal fade">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -133,53 +133,14 @@
         <hr class="my-3 sep">
 
         <h5 class="card-title">1-Rep Max Weight</h5>
-        <ul class="list-group">
-            <li class="list-group-item list-group-item-action d-flex text-primary pr-1">
-                <div class="mr-auto">Chest Press</div>
-                <span class="badge badge-primary text-right col-2 pr-1">500</span>
-                <span class="badge badge-primary text-right">KG</span>
-                <div class="dropdown p-0">
-                    <button class="btn btn-outline-primary btn-sm m-0 p-0 px-2" style="border-color: rgba(0,0,0,0);" type="button" data-toggle="dropdown">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </button>
-                    <div class="dropdown-menu">
-                        <a type="button" class="btn dropdown-item" data-toggle="modal" data-target="#modal_max_exercise">Edit</a>
-                        <a type="button" class="btn dropdown-item" href="#">Delete</a>
-                    </div>
-                </div>
-            </li>
-            <li class="list-group-item list-group-item-action d-flex text-primary pr-1">
-                <div class="mr-auto">Leg Press</div>
-                <span class="badge badge-primary text-right col-2 pr-1">1000</span>
-                <span class="badge badge-primary text-right">KG</span>
-                <div class="dropdown p-0">
-                    <button class="btn btn-outline-primary btn-sm m-0 p-0 px-2" style="border-color: rgba(0,0,0,0);" type="button" data-toggle="dropdown">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </button>
-                    <div class="dropdown-menu">
-                        <a type="button" class="btn dropdown-item" data-toggle="modal" data-target="#modal_max_exercise">Edit</a>
-                        <a type="button" class="btn dropdown-item" href="#">Delete</a>
-                    </div>
-                </div>
-            </li>
-            <li class="list-group-item list-group-item-action d-flex align-items-stretch text-primary pr-1">
-                <div class="mr-auto">Pulldown</div>
-                <span class="badge badge-primary text-right col-2 pr-1">250</span>
-                <span class="badge badge-primary text-right">KG</span>
-                <div class="dropdown p-0">
-                    <button class="btn btn-outline-primary btn-sm m-0 p-0 px-2" style="border-color: rgba(0,0,0,0);" type="button" data-toggle="dropdown">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </button>
-                    <div class="dropdown-menu">
-                        <a type="button" class="btn dropdown-item" data-toggle="modal" data-target="#modal_max_exercise">Edit</a>
-                        <a type="button" class="btn dropdown-item" href="#">Delete</a>
-                    </div>
-                </div>
-            </li>
+        <ul id="max_weight_records" class="list-group">
+            {% for max_weight_record_template in max_weight_record_templates %}
+                {{ max_weight_record_template|safe }}
+            {% endfor %}
         </ul>
         <hr class="my-1 sep">
-        <button type="button" class="btn btn-outline-secondary btn-sm btn-block" data-toggle="modal" data-target="#modal_max_exercise">Add 1-Rep Max Weight</button>
-        <div class="modal fade" id="modal_max_exercise">
+        <button id="btn_append_max_weight_records" type="button" class="btn btn-outline-secondary btn-sm btn-block" data-toggle="modal" data-target="#modal_add_max_weight">Add 1-Rep Max Weight</button>
+        <div id="modal_add_max_weight" class="modal fade">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header bg-primary">
@@ -188,29 +149,31 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-
                     <div class="modal-body">
+                        <div class="progress mb-3 d-none" id="modal_add_max_weight_loading">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"> loading </div>
+                        </div>
                         <div class="form-group">
-                            <label for="max_muscle_group_select" class="text-primary">MUSCLE GROUP</label>
-                            <select class="custom-select custom-select-sm muscle_group_select" id="max_muscle_group_select" muscle-group-exercises="max_exercise_select">
-                                {% for muscle_group in muscle_groups %}
+                            <label for="max_weight_muscle_group_select" class="text-primary">MUSCLE GROUP</label>
+                            <select id="max_weight_muscle_group_select" class="custom-select custom-select-sm muscle_group_select" muscle-group-exercises="max_weight_exercise_select">
+                                {% for strength_muscle_group in strength_muscle_groups %}
                                     {% if loop.index0 == 0 %}
-                                    <option selected>{{ muscle_group }}</option>
+                                    <option value="{{ strength_muscle_group }}" selected>{{ strength_muscle_group }}</option>
                                     {% else %}
-                                    <option>{{ muscle_group }}</option>
+                                    <option value="{{ strength_muscle_group }}">{{ strength_muscle_group }}</option>
                                     {% endif %}
                                 {% endfor %}
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <label for="max_exercise_select" class="text-primary">EXERCISE</label>
-                            <select class="custom-select custom-select-sm" id="max_exercise_select">
-                                {% for strength_exercise in strength_exercises %}
+                            <label for="max_weight_exercise_select" class="text-primary">EXERCISE</label>
+                            <select id="max_weight_exercise_select" class="custom-select custom-select-sm" >
+                                {% for strength_exercise_id_name in strength_exercise_ids_names %}
                                     {% if loop.index0 == 0 %}
-                                    <option selected>{{ strength_exercise }}</option>
+                                    <option value="{{ strength_exercise_id_name[0] }}" selected>{{ strength_exercise_id_name[1] }}</option>
                                     {% else %}
-                                    <option>{{ strength_exercise }}</option>
+                                    <option value="{{ strength_exercise_id_name[0] }}">{{ strength_exercise_id_name[1] }}</option>
                                     {% endif %}
                                 {% endfor %}
                             </select>
@@ -219,7 +182,7 @@
                         <div class="form-group">
                             <label class="text-primary">1-REP MAX WEIGHT</label>
                             <div class="input-group input-group-sm">
-                                <input type="number" class="form-control text-right" placeholder="weight" value="0">
+                                <input id="max_weight_input" type="number" class="form-control text-right" placeholder="weight" value="0">
                                 <div class="input-group-append">
                                     <span class="input-group-text">kg</span>
                                 </div>
@@ -228,7 +191,8 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">ADD</button>
+                        <button type="button" class="btn btn-danger" id="btn_add_max_weight">ADD</button>
+                        <button type="button" class="btn btn-info" id="btn_save_max_weight">SAVE</button>
                     </div>
                 </div>
             </div>

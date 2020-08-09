@@ -1,0 +1,18 @@
+<li class="list-group-item list-group-item-action d-flex text-primary pr-1 max_weight_exercise_record" max_weight_record_id="{{ max_weight_record_id }}">
+    <div class="mr-auto">
+        {{ exercise_name }}
+    </div>
+    <span class="badge badge-primary text-right col-2 pr-1">
+        {{ exercise_max_weight }}
+    </span>
+    <span class="badge badge-primary text-right">KG</span>
+    <div class="dropdown p-0">
+        <button class="btn btn-outline-primary btn-sm m-0 p-0 px-2" style="border-color: rgba(0,0,0,0);" type="button" data-toggle="dropdown">
+            <i class="fas fa-ellipsis-h"></i>
+        </button>
+        <div class="dropdown-menu">
+            <a type="button" class="btn dropdown-item">Edit</a>
+            <a type="button" class="btn dropdown-item">Delete</a>
+        </div>
+    </div>
+</li>

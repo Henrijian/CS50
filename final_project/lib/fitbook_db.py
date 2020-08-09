@@ -45,6 +45,12 @@ CARDIO_RECORDS_HRS_COL = "hours"
 CARDIO_RECORDS_MINS_COL = "minutes"
 CARDIO_RECORDS_SECS_COL = "seconds"
 
+MAX_WEIGHT_RECORDS_TABLE = "max_weight_records"
+MAX_WEIGHT_RECORDS_ID_COL = "id"
+MAX_WEIGHT_RECORDS_RID_COL = "rid"
+MAX_WEIGHT_RECORDS_EID_COL = "eid"
+MAX_WEIGHT_RECORDS_WEIGHT_COL = "weight"
+
 
 ##################################################
 # users table
@@ -649,3 +655,88 @@ def get_seconds_by_record_details_id(db, record_details_id):
     else:
         seconds = -1
     return seconds
+
+
+##################################################
+# max_weight_records table
+##################################################
+def add_max_weight_record(db, rid, eid, weight):
+    if max_weight_record_exist(db, rid, eid, weight):
+        raise Exception("Max weight record already exist!")
+
+    sql = "INSERT INTO %s (%s, %s, %s) VALUES(?, ?, ?)" % (MAX_WEIGHT_RECORDS_TABLE, MAX_WEIGHT_RECORDS_RID_COL,
+                                                           MAX_WEIGHT_RECORDS_EID_COL, MAX_WEIGHT_RECORDS_WEIGHT_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rid, eid, weight))
+    if not cur.lastrowid:
+        raise Exception("Add max weight record(rid:%s, eid: %s, weight: %s) to database failed" % (rid, eid, weight))
+    db.commit()
+
+
+def max_weight_record_id_exist(db, max_weight_record_id):
+    sql = "SELECT * FROM %s WHERE %s=?" % (MAX_WEIGHT_RECORDS_TABLE, MAX_WEIGHT_RECORDS_ID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (max_weight_record_id,))
+    rows = cur.fetchall()
+    return len(rows) > 0
+
+
+def max_weight_record_exist(db, rid, eid, weight):
+    sql = "SELECT * FROM %s WHERE %s=? AND %s=? AND %s=?" % (MAX_WEIGHT_RECORDS_TABLE, MAX_WEIGHT_RECORDS_RID_COL,
+                                                             MAX_WEIGHT_RECORDS_EID_COL, MAX_WEIGHT_RECORDS_WEIGHT_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rid, eid, weight))
+    rows = cur.fetchall()
+    return len(rows) > 0
+
+
+def get_max_weight_record_id(db, rid, eid, weight):
+    sql = "SELECT %s FROM %s WHERE %s=? AND %s=? AND %s=?" % (MAX_WEIGHT_RECORDS_ID_COL, MAX_WEIGHT_RECORDS_TABLE,
+                                                              MAX_WEIGHT_RECORDS_RID_COL, MAX_WEIGHT_RECORDS_EID_COL,
+                                                              MAX_WEIGHT_RECORDS_WEIGHT_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rid, eid, weight))
+    row = cur.fetchone()
+    if row:
+        id = row[MAX_WEIGHT_RECORDS_ID_COL]
+    else:
+        id = -1
+    return id
+
+
+def get_max_weight_record_ids(db, record_id):
+    sql = "SELECT %s FROM %s WHERE %s=?" % (MAX_WEIGHT_RECORDS_ID_COL, MAX_WEIGHT_RECORDS_TABLE,
+                                            MAX_WEIGHT_RECORDS_RID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (record_id,))
+    rows = cur.fetchall()
+    ids = []
+    for row in rows:
+        ids.append(row[MAX_WEIGHT_RECORDS_ID_COL])
+    return ids
+
+
+def get_max_weight_records_exercise_id(db, max_weight_record_id):
+    sql = "SELECT %s FROM %s WHERE %s=?" % (MAX_WEIGHT_RECORDS_EID_COL, MAX_WEIGHT_RECORDS_TABLE,
+                                            MAX_WEIGHT_RECORDS_ID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (max_weight_record_id,))
+    row = cur.fetchone()
+    if row:
+        eid = row[MAX_WEIGHT_RECORDS_EID_COL]
+    else:
+        eid = -1
+    return eid
+
+
+def get_max_weight_records_weight(db, max_weight_record_id):
+    sql = "SELECT %s FROM %s WHERE %s=?" % (MAX_WEIGHT_RECORDS_WEIGHT_COL, MAX_WEIGHT_RECORDS_TABLE,
+                                            MAX_WEIGHT_RECORDS_ID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (max_weight_record_id,))
+    row = cur.fetchone()
+    if row:
+        weight = row[MAX_WEIGHT_RECORDS_WEIGHT_COL]
+    else:
+        weight = -1
+    return weight

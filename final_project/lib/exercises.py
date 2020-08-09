@@ -128,6 +128,22 @@ class ExerciseRecords:
         else:
             raise IndexError
 
+    def __setitem__(self, key, value):
+        if not isinstance(value, ExerciseRecord):
+            raise Exception("Value must be ExerciseRecord")
+        if key <= len(self.records):
+            self.records[key] = value
+        else:
+            raise IndexError
+
+    def __len__(self):
+        return len(self.records)
+
+    def append(self, value):
+        if not isinstance(value, ExerciseRecord):
+            raise Exception("value data type is not ExerciseRecord")
+        self.records.append(value)
+
     def data(self):
         data = []
         for record in self.records:
@@ -135,8 +151,58 @@ class ExerciseRecords:
             data.append(record_data)
         return data
 
-    def append(self, exercise_record):
-        self.records.append(exercise_record)
+
+class MaxWeightRecord:
+    def __init__(self):
+        self.max_weight_record_id = -1
+        self.exercise_name = ""
+        self.exercise_id = -1
+        self.max_weight = 0
+
+    def data(self):
+        return {
+            "max_weight_record_id": self.max_weight_record_id,
+            "exercise_name": self.exercise_name,
+            "exercise_id": self.exercise_id,
+            "max_weight": self.max_weight
+        }
+
+
+class MaxWeightRecords:
+    def __init__(self):
+        self.records = []
+
+    def __getitem__(self, idx):
+        if idx <= len(self.records):
+            return self.records[idx]
+        else:
+            raise IndexError
+
+    def __setitem__(self, key, value):
+        if not isinstance(value, MaxWeightRecord):
+            raise Exception("Value must be MaxWeightRecord")
+        if key <= len(self.records):
+            self.records[key] = value
+        else:
+            raise IndexError
+
+    def __len__(self):
+        return len(self.records)
+
+    def append(self, value):
+        if not isinstance(value, MaxWeightRecord):
+            raise Exception("value data type is not MaxWeightRecord")
+        self.records.append(value)
+
+    def data(self):
+        data = []
+        for record in self.records:
+            record_data = record.data()
+            data.append(record_data)
+        return data
+
+    def sort_by_name(self):
+        self.records = sorted(self.records, key=lambda record: record.exercise_name)
 
 
 def exercise_date_str_to_date(date_str):
@@ -206,6 +272,15 @@ def is_exercise_time_valid(exercise_hours, exercise_minutes, exercise_seconds):
     if (exercise_hours == 0) and (exercise_minutes == 0) and (exercise_seconds == 0):
         return False
 
+    return True
+
+
+def is_max_weight_valid(max_weight):
+    # Check exercise hours
+    if not isinstance(max_weight, int):
+        return False
+    if (0 > max_weight) or (max_weight > 1000):
+        return False
     return True
 
 
@@ -463,7 +538,7 @@ def get_exercise_records(db, user_id, record_date):
     rdids_eids_orders = get_rdids_eids_orders_by_record_id(db, record_id)
     if not rdids_eids_orders:
         return exercise_records
-    sorted(rdids_eids_orders, key=lambda token: token[2])
+    rdids_eids_orders = sorted(rdids_eids_orders, key=lambda token: token[2])
     record_details_ids = []
     exercise_ids = []
     exercise_orders = []
@@ -546,7 +621,8 @@ def change_to_strength_exercise_record(db, record_details_id, exercise_id, exerc
     return ERR_SUCCESS
 
 
-def change_to_cardio_exercise_record(db, record_details_id, exercise_id, exercise_hours, exercise_minutes, exercise_seconds):
+def change_to_cardio_exercise_record(db, record_details_id, exercise_id, exercise_hours, exercise_minutes,
+                                     exercise_seconds):
     # Check arguments
     if not isinstance(db, sqlite3.Connection):
         raise Exception("db is not a database")
@@ -599,4 +675,118 @@ def change_to_cardio_exercise_record(db, record_details_id, exercise_id, exercis
     # Update record details
     update_record_details_exercise(db, record_details_id, exercise_id)
     add_cardio_record(db, record_details_id, exercise_hours, exercise_minutes, exercise_seconds)
+    return ERR_SUCCESS
+
+
+def get_max_weight_record(db, max_weight_record_id):
+    if not isinstance(db, sqlite3.Connection):
+        raise Exception("Database manager is not FitBookDB")
+
+    if not max_weight_record_id_exist(db, max_weight_record_id):
+        raise Exception("Max weight record id does not exist")
+
+    exercise_id = get_max_weight_records_exercise_id(db, max_weight_record_id)
+    if exercise_id <= 0:
+        raise Exception("Cannot get exercise id by max weight record id(%s)" % max_weight_record_id)
+
+    exercise_name = get_exercise_name_by_id(db, exercise_id)
+    if not exercise_name:
+        raise Exception("Cannot get exercise name by exercise id(%s)" % exercise_name)
+
+    max_weight = get_max_weight_records_weight(db, max_weight_record_id)
+    if max_weight <= 0:
+        raise Exception("Cannot get max weight by max weight record id(%s)" % max_weight_record_id)
+
+    max_weight_record = MaxWeightRecord()
+    max_weight_record.max_weight_record_id = max_weight_record_id
+    max_weight_record.exercise_name = exercise_name
+    max_weight_record.exercise_id = exercise_id
+    max_weight_record.max_weight = max_weight
+
+    return max_weight_record
+
+
+def get_max_weight_records(db, user_id, record_date):
+    if not isinstance(db, sqlite3.Connection):
+        raise Exception("db is not a database")
+    if not user_id:
+        raise Exception("Cannot get max weight records by empty user id")
+    if not isinstance(record_date, datetime.datetime):
+        raise Exception("Invalid type of record date")
+
+    max_weight_records = MaxWeightRecords()
+
+    # Get record id
+    record_id = get_record_id(db, user_id, record_date)
+    if record_id <= 0:
+        return max_weight_records
+
+    # Get max weight record ids
+    max_weight_record_ids = get_max_weight_record_ids(db, record_id)
+    if not max_weight_record_ids:
+        return max_weight_records
+
+    # Get max weight records by ids
+    for max_weight_record_id in max_weight_record_ids:
+        max_weight_record = get_max_weight_record(db, max_weight_record_id)
+        max_weight_records.append(max_weight_record)
+
+    return max_weight_records
+
+
+def append_max_weight_record(db, user_id, record_date, exercise_id, max_weight):
+    if not isinstance(db, sqlite3.Connection):
+        raise Exception("db is not a database")
+
+    # Check user id
+    if not user_id_exist(db, user_id):
+        return ERR_USER_ID_NOT_EXIST
+
+    # Check record date
+    if not record_date:
+        return ERR_RECORD_DATE_EMPTY
+    if not isinstance(record_date, datetime.datetime):
+        return ERR_RECORD_DATE_INVALID
+
+    # Check exercise id
+    if not exercise_id:
+        return ERR_EXERCISE_ID_EMPTY
+    exercise_name = get_exercise_name_by_id(db, exercise_id)
+    if not exercise_name:
+        return ERR_EXERCISE_ID_INVALID
+
+    # Check max weight
+    if max_weight:
+        try:
+            max_weight = int(max_weight)
+        except:
+            return ERR_MAX_WEIGHT_INVALID
+    else:
+        max_weight = 0
+
+    if not is_max_weight_valid(max_weight):
+        return ERR_MAX_WEIGHT_INVALID
+
+    # Get record id
+    record_id = get_record_id(db, user_id, record_date)
+    if record_id <= 0:
+        add_record_id(db, user_id, record_date)
+        record_id = get_record_id(db, user_id, record_date)
+        if record_id <= 0:
+            raise Exception("Add record to database failed")
+
+    # Check max weight exercise existence
+    max_weight_record_ids = get_max_weight_record_ids(db, record_id)
+    exercise_ids = []
+    for id in max_weight_record_ids:
+        eid = get_max_weight_records_exercise_id(db, id)
+        exercise_ids.append(eid)
+    if exercise_id in exercise_ids:
+        return ERR_MAX_WEIGHT_REPEAT
+
+    # Add max weight record
+    add_max_weight_record(db, record_id, exercise_id, max_weight)
+    if not max_weight_record_exist(db, record_id, exercise_id, max_weight):
+        raise Exception("Add max weight record to database failed")
+
     return ERR_SUCCESS
