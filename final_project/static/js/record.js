@@ -403,11 +403,36 @@ var save_edit_exercise_modal = function(record_details_id) {
         },
         success:function(data) {
             if (data["error_code"] == 0) {
-                if (change_exercise_record_card_header_name(record_details_id, exercise_name)) {
-                    $("#" + MODAL_ADD_EXERCISE_ID).modal('hide');
-                } else {
-                    alert_add_exercise_modal("Cannot modify exercise name in list");
+                const exercise_records_element = document.getElementById(RECORD_EXERCISES_ID);
+                if (!exercise_records_element) {
+                    console.log("exercise records container does not exist");
+                    return false;
                 }
+                // add exercise record to server
+                $.ajax({
+                    url: "/api/get_record",
+                    type: "POST",
+                    data: {record_date: get_record_date()},
+                    dataType: "json",
+                    beforeSend:function() {
+                        toggle_on_loading_progress_bar_exercise_modal();
+                    },
+                    success:function(data) {
+                        if (data["error_code"] == 0) {
+                            const result = JSON.parse(data["result"]);
+                            const exercise_records = result["exercise_records"];
+                            initialize_exercise_records();
+                            exercise_records_element.innerHTML = exercise_records;
+                            refresh_collapse_toggler();
+                            $("#" + MODAL_ADD_EXERCISE_ID).modal("hide");
+                        } else {
+                            alert_add_exercise_modal(data["error_message"]);
+                        }
+                    },
+                    complete:function() {
+                        toggle_off_loading_progress_bar_exercise_modal();
+                    }
+                });
             } else {
                 alert_add_exercise_modal(data["error_message"]);
             }

@@ -319,6 +319,45 @@ def get_exercise_record():
         return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
 
 
+@app.route("/api/get_exercise_records", methods=["GET", "POST"])
+@login_required
+def get_exercise_records():
+    if request.method == "POST":
+        # Get user id
+        user_id = session["user_id"]
+        # Get record date
+        record_date_str = request.form["record_date"]
+        if not record_date_str:
+            return response_json(ERR_EXERCISE_DATE_EMPTY)
+        record_date = exercises.exercise_date_str_to_date(record_date_str)
+        if not record_date:
+            return response_json(ERR_EXERCISE_DATE_INVALID)
+        # Get exercise records
+        try:
+            exercise_records = exercises.get_exercise_records(get_db(), user_id, record_date)
+        except Exception as e:
+            print(e)
+            return response_json(ERR_INTERNAL)
+        # Get templates of exercise records
+        exercise_records_htmls = []
+        for exercise_record in exercise_records:
+            exercise_type = exercise_record.exercise_type
+            record_details_id = exercise_record.record_details_id
+            if exercise_type == EXERCISE_TYPE_STRENGTH:
+                exercise_record_template = get_strength_exercise_record_template(record_details_id)
+            elif exercise_type == EXERCISE_TYPE_CARDIO:
+                exercise_record_template = get_cardio_exercise_record_template(record_details_id)
+            else:
+                raise Exception("Unknown exercise type* %s" % exercise_type)
+            exercise_records_htmls.append(exercise_record_template)
+        exercise_records_html = "\n".join(exercise_records_htmls)
+        # Organize result
+        result = {"exercise_records_html": exercise_records_html}
+        return response_json(ERR_SUCCESS, result=result)
+    else:
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+
+
 @app.route("/api/get_strength_exercise_record", methods=["GET", "POST"])
 @login_required
 def get_strength_exercise_record():
