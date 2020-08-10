@@ -686,6 +686,19 @@ def update_max_weight_record(db, id, rid, eid, weight):
     db.commit()
 
 
+def delete_max_weight_record(db, id):
+    if not max_weight_record_id_exist(db, id):
+        raise Exception("Max weight record does not exist")
+
+    # delete max weight record
+    sql = "DELETE FROM %s WHERE %s=?" % (MAX_WEIGHT_RECORDS_TABLE, MAX_WEIGHT_RECORDS_ID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (id,))
+    if cur.rowcount < 1:
+        raise Exception("Delete max weight record by max weight record id(%s) failed" % id)
+    db.commit()
+
+
 def max_weight_record_id_exist(db, max_weight_record_id):
     sql = "SELECT * FROM %s WHERE %s=?" % (MAX_WEIGHT_RECORDS_TABLE, MAX_WEIGHT_RECORDS_ID_COL)
     cur = db.cursor()

@@ -554,7 +554,7 @@ var delete_exercise_record = function(record_details_id) {
                     data: {record_date: get_record_date()},
                     dataType: "json",
                     beforeSend:function() {
-                        toggle_on_loading_progress_bar_exercise_modal();
+                        toggle_on_loading_progress_bar_record();
                     },
                     success:function(data) {
                         if (data["error_code"] == 0) {
@@ -563,17 +563,16 @@ var delete_exercise_record = function(record_details_id) {
                             initialize_exercise_records();
                             exercise_records_element.innerHTML = exercise_records;
                             refresh_collapse_toggler();
-                            $("#" + MODAL_ADD_EXERCISE_ID).modal("hide");
                         } else {
-                            alert_add_exercise_modal(data["error_message"]);
+                            alert_record_exercise_card(data["error_message"]);
                         }
                     },
                     complete:function() {
-                        toggle_off_loading_progress_bar_exercise_modal();
+                        toggle_off_loading_progress_bar_record();
                     }
                 });
             } else {
-                alert_add_exercise_modal(data["error_message"]);
+                alert_record_exercise_card(data["error_message"]);
             }
         },
         complete:function() {
@@ -740,7 +739,53 @@ var save_edit_max_weight_modal = function(max_weight_record_id) {
 
 // delete max weight record
 var delete_max_weight_record = function(max_weight_record_id) {
-
+    // delete exercise record in server
+    $.ajax({
+        url: "/api/delete_max_weight_record",
+        type: "POST",
+        data: {"max_weight_record_id": max_weight_record_id},
+        dataType: "json",
+        beforeSend:function() {
+            toggle_on_loading_progress_bar_record();
+        },
+        success:function(data) {
+            if (data["error_code"] == 0) {
+                const max_weight_records = document.getElementById(MAX_WEIGHT_RECORDS_ID);
+                if (!max_weight_records) {
+                    console.log("max weight records container does not exist");
+                    return false;
+                }
+                // get max weight records html
+                $.ajax({
+                    url: "/api/get_max_weight_records_html",
+                    type: "POST",
+                    data: {record_date: get_record_date()},
+                    dataType: "json",
+                    beforeSend:function() {
+                        toggle_on_loading_progress_bar_record();
+                    },
+                    success:function(data) {
+                        if (data["error_code"] == 0) {
+                            const result = JSON.parse(data["result"]);
+                            const max_weight_records_html = result["max_weight_records_html"];
+                            initialize_max_weight_records();
+                            max_weight_records.innerHTML = max_weight_records_html;
+                        } else {
+                            alert_record_exercise_card(data["error_message"]);
+                        }
+                    },
+                    complete:function() {
+                        toggle_off_loading_progress_bar_record();
+                    }
+                });
+            } else {
+                alert_record_exercise_card(data["error_message"]);
+            }
+        },
+        complete:function() {
+            toggle_off_loading_progress_bar_record();
+        }
+    });
 }
 
 // initialize exercise records

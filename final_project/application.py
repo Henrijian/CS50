@@ -783,6 +783,25 @@ def edit_max_weight_record():
         return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
 
 
+@app.route("/api/delete_max_weight_record", methods=["GET", "POST"])
+@login_required
+def delete_max_weight_record():
+    if request.method == "POST":
+        # Get max weight record id
+        max_weight_record_id = request.form["max_weight_record_id"]
+        if not max_weight_record_id_exist(get_db(), max_weight_record_id):
+            return response_json(ERR_MAX_WEIGHT_MISSING)
+        # Delete max weight record
+        try:
+            exercises.delete_max_weight_record(get_db(), max_weight_record_id)
+        except Exception as e:
+            print(e)
+            return response_json(ERR_DELETE_MAX_WEIGHT_FAILED)
+        return response_json(ERR_SUCCESS)
+    else:
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+
+
 ##################################################
 # Templates
 ##################################################
