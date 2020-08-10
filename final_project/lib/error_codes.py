@@ -41,6 +41,7 @@ ERR_EXERCISE_SECONDS_INVALID = 39
 ERR_DELETE_EXERCISE_RECORD_FAILED = 40
 ERR_MAX_WEIGHT_INVALID = 41
 ERR_MAX_WEIGHT_REPEAT = 42
+ERR_MAX_WEIGHT_MISSING = 43
 
 
 def error_message(error_code):
@@ -126,5 +127,7 @@ def error_message(error_code):
         return "Max weight is not valid"
     elif error_code == ERR_MAX_WEIGHT_REPEAT:
         return "Max weight record already exist"
+    elif error_code == ERR_MAX_WEIGHT_MISSING:
+        return "Max weight record does not exist"
     else:
         return "Unknown error"

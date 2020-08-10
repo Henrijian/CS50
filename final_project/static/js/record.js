@@ -207,7 +207,7 @@ var initialize_add_max_weight_modal = function() {
 }
 
 // initialize save max weight modal
-var initialize_save_max_weight_modal = function() {
+var initialize_edit_max_weight_modal = function(max_weight_record_id) {
     initialize_max_weight_modal();
 
     // hide add button
@@ -215,6 +215,13 @@ var initialize_save_max_weight_modal = function() {
 
     // show save button
     show_save_max_weight_button();
+
+    const save_button = document.getElementById(BTN_SAVE_MAX_WEIGHT_ID);
+    if (!save_button) {
+        console.log("cannot find save button");
+        return false;
+    }
+    save_button.setAttribute("onclick", "save_edit_max_weight_modal(" + max_weight_record_id + ")");
 }
 
 // load strength exercise modal
@@ -575,6 +582,167 @@ var delete_exercise_record = function(record_details_id) {
     });
 }
 
+// show edit max weight modal
+var show_edit_max_weight_modal = function(max_weight_record_id) {
+    // initialize modal
+    initialize_edit_max_weight_modal(max_weight_record_id);
+    // load edit max weight modal
+    $.ajax({
+        url: "/api/get_max_weight_record",
+        type: "POST",
+        data: {max_weight_record_id: max_weight_record_id},
+        dataType: "json",
+        beforeSend:function() {
+            toggle_on_loading_progress_bar_max_weight_modal();
+        },
+        success:function(data) {
+            if (data["error_code"] == 0) {
+                const result = JSON.parse(data["result"]);
+                const max_weight_record = result["max_weight_record"];
+                const muscle_group = max_weight_record["muscle_group"];
+                const exercise_id = max_weight_record["exercise_id"];
+                const exercise_name = max_weight_record["exercise_name"];
+                const max_weight = max_weight_record["max_weight"];
+                // update muscle group
+                const muscle_group_select = document.getElementById(MAX_WEIGHT_MUSCLE_GROUP_SELECT_ID);
+                if (!muscle_group_select) {
+                    console.log("cannot get max weight muscle group select");
+                    return false;
+                }
+                $(muscle_group_select).val(muscle_group);
+                // update exercise
+                const exercise_select = document.getElementById(MAX_WEIGHT_EXERCISE_SELECT_ID);
+                if (!exercise_select) {
+                    console.log("cannot get max weight exercise select");
+                    return false;
+                }
+                $.ajax({
+                    url: "/api/get_muscle_group_exercises",
+                    type: "GET",
+                    data: {muscle_group: muscle_group},
+                    dataType: "json",
+                    beforeSend:function() {
+                        toggle_on_loading_progress_bar_max_weight_modal();
+                    },
+                    success:function(data) {
+                        if (data["error_code"] == 0) {
+                            const exercise_ids_names = $.parseJSON(data["result"]);
+                            $(exercise_select).empty();
+                            $.each(exercise_ids_names, function(index, value) {
+                                const exercise_option = document.createElement("option");
+                                exercise_option.setAttribute("value", value[0]);
+                                exercise_option.textContent = value[1];
+                                exercise_select.append(exercise_option);
+                            });
+                            $(exercise_select).val(exercise_id);
+                        } else {
+                            alert_add_max_weight_modal(data["error_message"]);
+                        }
+                    },
+                    complete:function() {
+                        toggle_off_loading_progress_bar_max_weight_modal();
+                    }
+                });
+                // update max weight input
+                const max_weight_input = document.getElementById(MAX_WEIGHT_INPUT_ID);
+                if (!max_weight_input) {
+                    console.log("max weight input does not exist");
+                    return false;
+                }
+                $(max_weight_input).val(max_weight);
+                // show edit max weight modal
+                $("#" + MODAL_ADD_MAX_WEIGHT_ID).modal("show");
+            } else {
+                alert_add_max_weight_modal(data["error_message"]);
+            }
+        },
+        complete:function() {
+            toggle_off_loading_progress_bar_max_weight_modal();
+        }
+    });
+}
+
+// save edit max weight modal
+var save_edit_max_weight_modal = function(max_weight_record_id) {
+    // get exercise id
+    const exercise_select = document.getElementById(MAX_WEIGHT_EXERCISE_SELECT_ID);
+    if (!exercise_select) {
+        alert_add_max_weight_modal("cannot get exercise");
+        return false;
+    }
+    const exercise_id = $(exercise_select).val();
+    if (!exercise_id) {
+        alert_add_max_weight_modal("cannot get exercise id");
+        return false;
+    }
+    // get max weight
+    const max_weight_input = document.getElementById(MAX_WEIGHT_INPUT_ID);
+    if (!max_weight_input) {
+        alert_add_max_weight_modal("cannot get max weight");
+        return false;
+    }
+    const max_weight = $(max_weight_input).val();
+    if (!max_weight) {
+        alert_add_max_weight_modal("cannot get max weight");
+        return false;
+    }
+    // add max weight record to server
+    $.ajax({
+        url: "/api/edit_max_weight_record",
+        type: "POST",
+        data: {"max_weight_record_id": max_weight_record_id,
+               "exercise_id": exercise_id,
+               "max_weight": max_weight},
+        dataType: "json",
+        beforeSend:function() {
+            toggle_on_loading_progress_bar_max_weight_modal();
+        },
+        success:function(data) {
+            if (data["error_code"] == 0) {
+                const max_weight_records = document.getElementById(MAX_WEIGHT_RECORDS_ID);
+                if (!max_weight_records) {
+                    console.log("max weight records container does not exist");
+                    return false;
+                }
+                // get max weight records html
+                $.ajax({
+                    url: "/api/get_max_weight_records_html",
+                    type: "POST",
+                    data: {record_date: get_record_date()},
+                    dataType: "json",
+                    beforeSend:function() {
+                        toggle_on_loading_progress_bar_max_weight_modal();
+                    },
+                    success:function(data) {
+                        if (data["error_code"] == 0) {
+                            const result = JSON.parse(data["result"]);
+                            const max_weight_records_html = result["max_weight_records_html"];
+                            initialize_max_weight_records();
+                            max_weight_records.innerHTML = max_weight_records_html;
+                            $("#" + MODAL_ADD_MAX_WEIGHT_ID).modal("hide");
+                        } else {
+                            alert_add_max_weight_modal(data["error_message"]);
+                        }
+                    },
+                    complete:function() {
+                        toggle_off_loading_progress_bar_max_weight_modal();
+                    }
+                });
+            } else {
+                alert_add_max_weight_modal(data["error_message"]);
+            }
+        },
+        complete:function() {
+            toggle_off_loading_progress_bar_max_weight_modal();
+        }
+    });
+}
+
+// delete max weight record
+var delete_max_weight_record = function(max_weight_record_id) {
+
+}
+
 // initialize exercise records
 var initialize_exercise_records = function() {
     $("#" + EXERCISE_RECORDS_ID).empty();
@@ -692,7 +860,6 @@ var toggle_off_loading_progress_bar_max_weight_modal = function() {
     }
     loading_progress_bar.classList.add("d-none");
 }
-
 
 // get record date
 var get_record_date = function() {
@@ -1004,7 +1171,7 @@ $("#" + BTN_ADD_MAX_WEIGHT_ID).on("click", function() {
                 const result = JSON.parse(data["result"]);
                 const max_weight_record_id = result["max_weight_record_id"];
                 $.ajax({
-                    url: "/api/get_max_weight_record",
+                    url: "/api/get_max_weight_record_html",
                     type: "POST",
                     data: {max_weight_record_id: max_weight_record_id},
                     dataType: "json",

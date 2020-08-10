@@ -155,6 +155,7 @@ class ExerciseRecords:
 class MaxWeightRecord:
     def __init__(self):
         self.max_weight_record_id = -1
+        self.muscle_group = ""
         self.exercise_name = ""
         self.exercise_id = -1
         self.max_weight = 0
@@ -162,6 +163,7 @@ class MaxWeightRecord:
     def data(self):
         return {
             "max_weight_record_id": self.max_weight_record_id,
+            "muscle_group": self.muscle_group,
             "exercise_name": self.exercise_name,
             "exercise_id": self.exercise_id,
             "max_weight": self.max_weight
@@ -276,8 +278,10 @@ def is_exercise_time_valid(exercise_hours, exercise_minutes, exercise_seconds):
 
 
 def is_max_weight_valid(max_weight):
-    # Check exercise hours
-    if not isinstance(max_weight, int):
+    # Check exercise max weight
+    try:
+        max_weight = int(max_weight)
+    except:
         return False
     if (0 > max_weight) or (max_weight > 1000):
         return False
@@ -693,12 +697,17 @@ def get_max_weight_record(db, max_weight_record_id):
     if not exercise_name:
         raise Exception("Cannot get exercise name by exercise id(%s)" % exercise_name)
 
+    muscle_group = get_exercise_muscle_group_by_id(db, exercise_id)
+    if not muscle_group:
+        raise Exception("Cannot get muscle group bt exercise id(%s)" % exercise_id)
+
     max_weight = get_max_weight_records_weight(db, max_weight_record_id)
     if max_weight <= 0:
         raise Exception("Cannot get max weight by max weight record id(%s)" % max_weight_record_id)
 
     max_weight_record = MaxWeightRecord()
     max_weight_record.max_weight_record_id = max_weight_record_id
+    max_weight_record.muscle_group = muscle_group
     max_weight_record.exercise_name = exercise_name
     max_weight_record.exercise_id = exercise_id
     max_weight_record.max_weight = max_weight
@@ -776,12 +785,7 @@ def append_max_weight_record(db, user_id, record_date, exercise_id, max_weight):
             raise Exception("Add record to database failed")
 
     # Check max weight exercise existence
-    max_weight_record_ids = get_max_weight_record_ids(db, record_id)
-    exercise_ids = []
-    for id in max_weight_record_ids:
-        eid = get_max_weight_records_exercise_id(db, id)
-        exercise_ids.append(eid)
-    if exercise_id in exercise_ids:
+    if max_weight_record_exercise_exist(db, record_id, exercise_id):
         return ERR_MAX_WEIGHT_REPEAT
 
     # Add max weight record
@@ -789,4 +793,23 @@ def append_max_weight_record(db, user_id, record_date, exercise_id, max_weight):
     if not max_weight_record_exist(db, record_id, exercise_id, max_weight):
         raise Exception("Add max weight record to database failed")
 
+    return ERR_SUCCESS
+
+
+def change_to_max_weight_record(db, max_weight_record_id, exercise_id, max_weight):
+    if not isinstance(db, sqlite3.Connection):
+        raise Exception("db is not a database")
+    if not max_weight_record_id_exist(db, max_weight_record_id):
+        raise Exception("max_weight_record_id does not exist")
+    if not exercise_id_exist(db, exercise_id):
+        raise Exception("exercise_id does not exist")
+    if not is_max_weight_valid(max_weight):
+        raise Exception("max_weight is invalid")
+    # Get record id
+    record_id = get_max_weight_records_record_id(db, max_weight_record_id)
+    # Check max weight exercise existence
+    if max_weight_record_exercise_exist(db, record_id, exercise_id):
+        return ERR_MAX_WEIGHT_REPEAT
+    # Update max weight record
+    update_max_weight_record(db, max_weight_record_id, record_id, exercise_id, max_weight)
     return ERR_SUCCESS
