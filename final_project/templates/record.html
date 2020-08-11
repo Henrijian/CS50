@@ -203,38 +203,59 @@
         <h5 class="card-title">Body</h5>
         <form>
             <div class="form-row">
-                <label for="weight" class="col-3 col-form-label text-uppercase">Weight</label>
+                <label for="body_weight_input" class="col-3 col-form-label text-uppercase">Weight</label>
                 <div class="input-group col">
-                    <input type="number" class="form-control text-right" id="weight" placeholder="weight">
-                    <div class="input-group-append" style="flex: 0 0 20%;">
-                        <span class="input-group-text" style="width: 100%;">kg</span>
+                    <input id="body_weight_input" value="{{ body_weight }}" type="number" class="form-control text-right" placeholder="weight" style="height: 100%" readonly>
+                    <div class="input-group-append">
+                        <span class="input-group-text d-flex justify-content-center" style="width: 4em;">
+                            kg
+                        </span>
+                        <button id="btn_edit_body_weight" type="button" class="btn btn-primary">
+                            <i class="fas fa-edit" style="width: 1em;"></i>
+                        </button>
+                        <button id="btn_save_body_weight" type="button" class="btn btn-info d-none">
+                            <i class="fas fa-save" style="width: 1em;"></i>
+                        </button>
                     </div>
                 </div>
             </div>
             <div class="form-row">
-                <label for="weight" class="col-3 col-form-label text-uppercase">Muscle</label>
+                <label for="muscle_weight_input" class="col-3 col-form-label text-uppercase">Muscle</label>
                 <div class="input-group col">
-                    <input type="number" class="form-control text-right" id="muscle" placeholder="weight">
-                    <div class="input-group-append" style="flex: 0 0 20%;">
-                        <span class="input-group-text" style="width: 100%;">kg</span>
+                    <input id="muscle_weight_input" value="{{ muscle_weight }}" type="number" class="form-control text-right" placeholder="weight" style="height: 100%" readonly>
+                    <div class="input-group-append">
+                        <span class="input-group-text d-flex justify-content-center" style="width: 4em;">
+                            kg
+                        </span>
+                        <button id="btn_edit_muscle_weight" type="button" class="btn btn-primary">
+                            <i class="fas fa-edit" style="width: 1em;"></i>
+                        </button>
+                        <button id="btn_save_muscle_weight" type="button" class="btn btn-info d-none">
+                            <i class="fas fa-save" style="width: 1em;"></i>
+                        </button>
                     </div>
                 </div>
             </div>
 
             <div class="form-row">
-                <label for="fat" class="col-3 col-form-label text-uppercase">Fat</label>
+                <label for="fat_rate_input" class="col-3 col-form-label text-uppercase">Fat</label>
                 <div class="input-group col">
-                    <input type="number" class="form-control text-right" id="fat" placeholder="ratio">
-                    <div class="input-group-append" style="flex: 0 0 20%;">
-                        <span class="input-group-text text-center" style="width: 100%;">%</span>
+                    <input id="fat_rate_input" value="{{ fat_rate }}" type="number" class="form-control text-right" placeholder="ratio" style="height: 100%;" readonly>
+                    <div class="input-group-append">
+                        <span class="input-group-text d-flex justify-content-center" style="width: 4em;">
+                            %
+                        </span>
+                        <button id="btn_edit_fat_rate" type="button" class="btn btn-primary">
+                            <i class="fas fa-edit" style="width: 1em;"></i>
+                        </button>
+                        <button id="btn_save_fat_rate" type="button" class="btn btn-info d-none">
+                            <i class="fas fa-save" style="width: 1em;"></i>
+                        </button>
                     </div>
                 </div>
             </div>
         </form>
 
-
-        <hr class="my-3 sep">
-        <button type="submit" class="btn btn-danger">Submit</button>
     </div>
 </div>
 {% endblock %}

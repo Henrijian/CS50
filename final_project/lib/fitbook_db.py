@@ -51,6 +51,12 @@ MAX_WEIGHT_RECORDS_RID_COL = "rid"
 MAX_WEIGHT_RECORDS_EID_COL = "eid"
 MAX_WEIGHT_RECORDS_WEIGHT_COL = "weight"
 
+BODY_RECORDS_TABLE = "body_records"
+BODY_RECORDS_ID_COL = "id"
+BODY_RECORDS_RID_COL = "rid"
+BODY_RECORDS_WEIGHT_COL = "weight"
+BODY_RECORDS_MUSCLE_WEIGHT_COL = "muscle_weight"
+BODY_RECORDS_FAT_RATE_COL = "fat_rate"
 
 ##################################################
 # users table
@@ -788,3 +794,116 @@ def get_max_weight_records_weight(db, max_weight_record_id):
     else:
         weight = -1
     return weight
+
+
+##################################################
+# max_weight_records table
+##################################################
+def body_records_rid_exist(db, rid):
+    sql = "SELECT * FROM %s WHERE %s=?" % (BODY_RECORDS_TABLE, BODY_RECORDS_RID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rid,))
+    rows = cur.fetchall()
+    return len(rows) > 0
+
+
+def get_body_records_weight(db, rid):
+    sql = "SELECT %s FROM %s WHERE %s=?" % (BODY_RECORDS_WEIGHT_COL, BODY_RECORDS_TABLE, BODY_RECORDS_RID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rid,))
+    row = cur.fetchone()
+    if row:
+        weight = row[BODY_RECORDS_WEIGHT_COL]
+    else:
+        weight = -1
+    return weight
+
+
+def add_body_records_weight(db, rid, weight):
+    if body_records_rid_exist(db, rid):
+        raise Exception("Body record already exist!")
+    sql = "INSERT INTO %s (%s, %s) VALUES(?, ?)" % (BODY_RECORDS_TABLE, BODY_RECORDS_RID_COL, BODY_RECORDS_WEIGHT_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rid, weight))
+    if not cur.lastrowid:
+        raise Exception("Add body record(rid:%s, weight: %s) to database failed" % (rid, weight))
+    db.commit()
+
+
+def update_body_records_weight(db, rid, weight):
+    if not body_records_rid_exist(db, rid):
+        raise Exception("Body record rid(%s) does not exist!" % rid)
+    sql = "UPDATE %s SET %s=? WHERE %s=?" % (BODY_RECORDS_TABLE, BODY_RECORDS_WEIGHT_COL, BODY_RECORDS_RID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (weight, rid))
+    if cur.rowcount < 1:
+        raise Exception("Update body record failed, rid: %s, weight: %s" % (rid, weight))
+    db.commit()
+
+
+def get_body_records_muscle_weight(db, rid):
+    sql = "SELECT %s FROM %s WHERE %s=?" % (BODY_RECORDS_MUSCLE_WEIGHT_COL, BODY_RECORDS_TABLE, BODY_RECORDS_RID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rid,))
+    row = cur.fetchone()
+    if row:
+        muscle_weight = row[BODY_RECORDS_MUSCLE_WEIGHT_COL]
+    else:
+        muscle_weight = -1
+    return muscle_weight
+
+
+def add_body_records_muscle_weight(db, rid, muscle_weight):
+    if body_records_rid_exist(db, rid):
+        raise Exception("Body record already exist!")
+    sql = "INSERT INTO %s (%s, %s) VALUES(?, ?)" % (BODY_RECORDS_TABLE, BODY_RECORDS_RID_COL, BODY_RECORDS_MUSCLE_WEIGHT_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rid, muscle_weight))
+    if not cur.lastrowid:
+        raise Exception("Add body record(rid:%s, muscle weight: %s) to database failed" % (rid, muscle_weight))
+    db.commit()
+
+
+def update_body_records_muscle_weight(db, rid, muscle_weight):
+    if not body_records_rid_exist(db, rid):
+        raise Exception("Body record rid(%s) does not exist!" % rid)
+    sql = "UPDATE %s SET %s=? WHERE %s=?" % (BODY_RECORDS_TABLE, BODY_RECORDS_MUSCLE_WEIGHT_COL, BODY_RECORDS_RID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (muscle_weight, rid))
+    if cur.rowcount < 1:
+        raise Exception("Update body record failed, rid: %s, muscle weight: %s" % (rid, muscle_weight))
+    db.commit()
+
+
+def get_body_records_fat_rate(db, rid):
+    sql = "SELECT %s FROM %s WHERE %s=?" % (BODY_RECORDS_FAT_RATE_COL, BODY_RECORDS_TABLE, BODY_RECORDS_RID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rid,))
+    row = cur.fetchone()
+    if row:
+        fat_rate = row[BODY_RECORDS_FAT_RATE_COL]
+    else:
+        fat_rate = -1
+    return fat_rate
+
+
+def add_body_records_fat_rate(db, rid, fat_rate):
+    if body_records_rid_exist(db, rid):
+        raise Exception("Body record already exist!")
+    sql = "INSERT INTO %s (%s, %s) VALUES(?, ?)" % (BODY_RECORDS_TABLE, BODY_RECORDS_RID_COL, BODY_RECORDS_FAT_RATE_COL)
+    cur = db.cursor()
+    cur.execute(sql, (rid, fat_rate))
+    if not cur.lastrowid:
+        raise Exception("Add body record(rid:%s, fat rate: %s) to database failed" % (rid, fat_rate))
+    db.commit()
+
+
+def update_body_records_fat_rate(db, rid, fat_rate):
+    if not body_records_rid_exist(db, rid):
+        raise Exception("Body record rid(%s) does not exist!" % rid)
+    sql = "UPDATE %s SET %s=? WHERE %s=?" % (BODY_RECORDS_TABLE, BODY_RECORDS_FAT_RATE_COL, BODY_RECORDS_RID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (fat_rate, rid))
+    if cur.rowcount < 1:
+        raise Exception("Update body record failed, rid: %s, fat rate: %s" % (rid, fat_rate))
+    db.commit()

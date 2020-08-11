@@ -12,6 +12,7 @@ from lib.fitbook_db import *
 # user associated lib
 from lib.users import *
 from lib import exercises
+from lib import body
 
 # Configure application
 app = Flask(__name__)
@@ -149,6 +150,9 @@ def record():
                 raise Exception("Request date is invalid: %s" % record_date_request)
         else:
             record_date = datetime.datetime.now()
+        # Get record id
+        record_id = get_record_id(get_db(), user_id, record_date)
+
         record_date_str = exercises.exercise_date_to_date_str(record_date)
         # Get strength muscle groups
         strength_muscle_groups = sorted(get_strength_muscle_groups(get_db()))
@@ -179,6 +183,18 @@ def record():
         for record in max_weight_records:
             template = get_max_weight_record_template(record.max_weight_record_id)
             max_weight_record_templates.append(template)
+        # get body weight
+        body_weight = get_body_records_weight(get_db(), record_id)
+        if body_weight < 0:
+            body_weight = ""
+        # get muscle weight
+        muscle_weight = get_body_records_muscle_weight(get_db(), record_id)
+        if muscle_weight < 0:
+            muscle_weight = ""
+        # get fat rate
+        fat_rate = get_body_records_fat_rate(get_db(), record_id)
+        if fat_rate < 0:
+            fat_rate = ""
 
         return render_template("record.html",
                                record_date_str=record_date_str,
@@ -186,7 +202,8 @@ def record():
                                strength_exercise_ids_names=strength_exercise_ids_names,
                                cardio_exercise_ids_names=cardio_exercise_ids_names,
                                exercise_record_templates=exercise_record_templates,
-                               max_weight_record_templates=max_weight_record_templates)
+                               max_weight_record_templates=max_weight_record_templates,
+                               body_weight=body_weight, muscle_weight=muscle_weight, fat_rate=fat_rate)
 
 
 def error_handler(e):
@@ -313,9 +330,23 @@ def get_record():
             template = get_max_weight_record_template(record.max_weight_record_id)
             max_weight_record_templates.append(template)
         max_weight_records_template = "\n".join(max_weight_record_templates)
+        # Get body record
+        record_id = get_record_id(get_db(), user_id, record_date)
+        body_weight = get_body_records_weight(get_db(), record_id)
+        if body_weight < 0:
+            body_weight = ""
+        muscle_weight = get_body_records_muscle_weight(get_db(), record_id)
+        if muscle_weight < 0:
+            muscle_weight = ""
+        fat_rate = get_body_records_fat_rate(get_db(), record_id)
+        if fat_rate < 0:
+            fat_rate = ""
         # Organize result
         result = {"exercise_records": exercise_records_template,
-                  "max_weight_records": max_weight_records_template}
+                  "max_weight_records": max_weight_records_template,
+                  "body_weight": body_weight,
+                  "muscle_weight": muscle_weight,
+                  "fat_rate": fat_rate}
         return response_json(ERR_SUCCESS, result=result)
     else:
         return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
@@ -483,7 +514,7 @@ def edit_exercise_record():
         if not exercise_type:
             return response_json(ERR_EXERCISE_ID_INVALID)
         # According exercise type, get needed information
-        if exercise_type == EXERCISE_TYPE_STRENGTH: # strength exercise
+        if exercise_type == EXERCISE_TYPE_STRENGTH:  # strength exercise
             # Exercise sets
             exercise_sets_str = request.form["exercise_sets"]
             if not exercise_sets_str:
@@ -502,7 +533,7 @@ def edit_exercise_record():
             except Exception as e:
                 print(e)
                 status_code = ERR_INTERNAL
-        elif exercise_type == EXERCISE_TYPE_CARDIO: # cardio exercise
+        elif exercise_type == EXERCISE_TYPE_CARDIO:  # cardio exercise
             exercise_hours = request.form["exercise_hours"]
             exercise_minutes = request.form["exercise_minutes"]
             exercise_seconds = request.form["exercise_seconds"]
@@ -797,6 +828,129 @@ def delete_max_weight_record():
         except Exception as e:
             print(e)
             return response_json(ERR_DELETE_MAX_WEIGHT_FAILED)
+        return response_json(ERR_SUCCESS)
+    else:
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+
+
+@app.route("/api/edit_body_weight", methods=["GET", "POST"])
+@login_required
+def edit_body_weight():
+    if request.method == "POST":
+        # Get user id
+        user_id = session["user_id"]
+        # Get record date
+        record_date_str = request.form["record_date"]
+        if not record_date_str:
+            return response_json(ERR_RECORD_DATE_EMPTY)
+        record_date = exercises.exercise_date_str_to_date(record_date_str)
+        if not record_date:
+            return response_json(ERR_RECORD_DATE_INVALID)
+        # Get record id
+        record_id = get_record_id(get_db(), user_id, record_date)
+        if record_id < 0:
+            try:
+                add_record_id(get_db(), user_id, record_date)
+                record_id = get_record_id(get_db(), user_id, record_date)
+            except Exception as e:
+                print(e)
+                return response_json(ERR_INTERNAL)
+        # Get body weight
+        body_weight = request.form["body_weight"]
+        # Check body weight
+        if not body.is_body_weight_valid(body_weight):
+            return response_json(ERR_BODY_WEIGHT_INVALID)
+        # Add/update body weight to database
+        try:
+            if body_records_rid_exist(get_db(), record_id):
+                update_body_records_weight(get_db(), record_id, body_weight)
+            else:
+                add_body_records_weight(get_db(), record_id, body_weight)
+        except Exception as e:
+            print(e)
+            return response_json(ERR_INTERNAL)
+        return response_json(ERR_SUCCESS)
+    else:
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+
+
+@app.route("/api/edit_muscle_weight", methods=["GET", "POST"])
+@login_required
+def edit_muscle_weight():
+    if request.method == "POST":
+        # Get user id
+        user_id = session["user_id"]
+        # Get record date
+        record_date_str = request.form["record_date"]
+        if not record_date_str:
+            return response_json(ERR_RECORD_DATE_EMPTY)
+        record_date = exercises.exercise_date_str_to_date(record_date_str)
+        if not record_date:
+            return response_json(ERR_RECORD_DATE_INVALID)
+        # Get record id
+        record_id = get_record_id(get_db(), user_id, record_date)
+        if record_id < 0:
+            try:
+                add_record_id(get_db(), user_id, record_date)
+                record_id = get_record_id(get_db(), user_id, record_date)
+            except Exception as e:
+                print(e)
+                return response_json(ERR_INTERNAL)
+        # Get muscle weight
+        muscle_weight = request.form["muscle_weight"]
+        # Check muscle weight
+        if not body.is_muscle_weight_valid(muscle_weight):
+            return response_json(ERR_MUSCLE_WEIGHT_INVALID)
+        # Add/update muscle weight to database
+        try:
+            if body_records_rid_exist(get_db(), record_id):
+                update_body_records_muscle_weight(get_db(), record_id, muscle_weight)
+            else:
+                add_body_records_muscle_weight(get_db(), record_id, muscle_weight)
+        except Exception as e:
+            print(e)
+            return response_json(ERR_INTERNAL)
+        return response_json(ERR_SUCCESS)
+    else:
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+
+
+@app.route("/api/edit_fat_rate", methods=["GET", "POST"])
+@login_required
+def edit_fat_rate():
+    if request.method == "POST":
+        # Get user id
+        user_id = session["user_id"]
+        # Get record date
+        record_date_str = request.form["record_date"]
+        if not record_date_str:
+            return response_json(ERR_RECORD_DATE_EMPTY)
+        record_date = exercises.exercise_date_str_to_date(record_date_str)
+        if not record_date:
+            return response_json(ERR_RECORD_DATE_INVALID)
+        # Get record id
+        record_id = get_record_id(get_db(), user_id, record_date)
+        if record_id < 0:
+            try:
+                add_record_id(get_db(), user_id, record_date)
+                record_id = get_record_id(get_db(), user_id, record_date)
+            except Exception as e:
+                print(e)
+                return response_json(ERR_INTERNAL)
+        # Get fat rate
+        fat_rate = request.form["fat_rate"]
+        # Check fat rate
+        if not body.is_fat_rate_valid(fat_rate):
+            return response_json(ERR_FAT_RATE_INVALID)
+        # Add/update muscle weight to database
+        try:
+            if body_records_rid_exist(get_db(), record_id):
+                update_body_records_fat_rate(get_db(), record_id, fat_rate)
+            else:
+                add_body_records_fat_rate(get_db(), record_id, fat_rate)
+        except Exception as e:
+            print(e)
+            return response_json(ERR_INTERNAL)
         return response_json(ERR_SUCCESS)
     else:
         return response_json(ERR_UNSUPPORT_REQUEST_METHOD)

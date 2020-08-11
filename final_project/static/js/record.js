@@ -64,6 +64,24 @@ const RECORD_DATE_ID = "record_date";
 
 const RECORD_LOADING_ID = "record_loading";
 
+const BODY_WEIGHT_INPUT_ID = "body_weight_input";
+
+const BODY_WEIGHT_EDIT_BUTTON_ID = "btn_edit_body_weight";
+
+const BODY_WEIGHT_SAVE_BUTTON_ID = "btn_save_body_weight";
+
+const MUSCLE_WEIGHT_INPUT_ID = "muscle_weight_input";
+
+const MUSCLE_WEIGHT_EDIT_BUTTON_ID = "btn_edit_muscle_weight";
+
+const MUSCLE_WEIGHT_SAVE_BUTTON_ID = "btn_save_muscle_weight";
+
+const FAT_RATE_INPUT_ID = "fat_rate_input";
+
+const FAT_RATE_EDIT_BUTTON_ID = "btn_edit_fat_rate";
+
+const FAT_RATE_SAVE_BUTTON_ID = "btn_save_fat_rate";
+
 //==================================================
 // functions definitions
 //==================================================
@@ -798,6 +816,21 @@ var initialize_max_weight_records = function() {
     $("#" + MAX_WEIGHT_RECORDS_ID).empty();
 }
 
+// initialize body weight input
+var initialize_body_weight_input = function() {
+    $("#" + BODY_WEIGHT_INPUT_ID).val("");
+}
+
+// initialize muscle weight input
+var initialize_muscle_weight_input = function() {
+    $("#" + MUSCLE_WEIGHT_INPUT_ID).val("");
+}
+
+// initialize fat rate input
+var initialize_fat_rate_input = function() {
+    $("#" + FAT_RATE_INPUT_ID).val("");
+}
+
 // alert message in add exercise modal
 var alert_add_exercise_modal = function(message) {
     if (!message) {
@@ -1249,7 +1282,7 @@ $("#" + BTN_ADD_MAX_WEIGHT_ID).on("click", function() {
 });
 
 // bind datepicker onChangeDate event to change record in container
-$("#" + RECORD_DATE_ID).datepicker().on("changeDate", function(e){
+$("#" + RECORD_DATE_ID).datepicker().on("changeDate", function(e) {
     const exercise_records_element = document.getElementById(EXERCISE_RECORDS_ID);
     if (!exercise_records_element) {
         console.log("exercise records container does not exist");
@@ -1282,6 +1315,16 @@ $("#" + RECORD_DATE_ID).datepicker().on("changeDate", function(e){
                 const max_weight_records = result["max_weight_records"];
                 initialize_max_weight_records();
                 max_weight_records_element.innerHTML = max_weight_records;
+                // Update body record
+                initialize_body_weight_input();
+                const body_weight = result["body_weight"];
+                $("#" + BODY_WEIGHT_INPUT_ID).val(body_weight);
+                initialize_muscle_weight_input();
+                const muscle_weight = result["muscle_weight"];
+                $("#" + MUSCLE_WEIGHT_INPUT_ID).val(muscle_weight);
+                initialize_fat_rate_input();
+                const fat_rate = result["fat_rate"];
+                $("#" + FAT_RATE_INPUT_ID).val(fat_rate);
             } else {
                 alert_record_exercise_card(data["error_message"]);
             }
@@ -1319,6 +1362,111 @@ $("#" + BTN_APPEND_EXERCISE_SETS_ID).on("click", function() {
                 const exercise_set_html_string = result["exercise_set_template"];
                 const exercise_set_element = $.parseHTML(exercise_set_html_string);
                 $(sets_container).append(exercise_set_element);
+            } else {
+                alert_record_exercise_card(data["error_message"]);
+            }
+        },
+        complete:function() {
+            toggle_off_loading_progress_bar_record();
+        }
+    });
+});
+
+// bind edit body weight button onClick event to enter edit mode
+$("#" + BODY_WEIGHT_EDIT_BUTTON_ID).on("click", function() {
+    $("#" + BODY_WEIGHT_INPUT_ID).removeAttr("readonly");
+    $("#" + BODY_WEIGHT_EDIT_BUTTON_ID).addClass("d-none");
+    $("#" + BODY_WEIGHT_SAVE_BUTTON_ID).removeClass("d-none");
+});
+
+// bind save body weight button onClick event to save input to server
+$("#" + BODY_WEIGHT_SAVE_BUTTON_ID).on("click", function() {
+    const record_date = get_record_date();
+    const body_weight = $("#" + BODY_WEIGHT_INPUT_ID).val();
+    $.ajax({
+        url: "/api/edit_body_weight",
+        type: "POST",
+        data: {record_date: record_date,
+               body_weight: body_weight},
+        dataType: "json",
+        beforeSend:function() {
+            toggle_on_loading_progress_bar_record();
+        },
+        success:function(data) {
+            if (data["error_code"] == 0) {
+                $("#" + BODY_WEIGHT_INPUT_ID).prop("readonly", true);
+                $("#" + BODY_WEIGHT_SAVE_BUTTON_ID).addClass("d-none");
+                $("#" + BODY_WEIGHT_EDIT_BUTTON_ID).removeClass("d-none");
+            } else {
+                alert_record_exercise_card(data["error_message"]);
+            }
+        },
+        complete:function() {
+            toggle_off_loading_progress_bar_record();
+        }
+    });
+});
+
+// bind edit muscle weight button onClick event to enter edit mode
+$("#" + MUSCLE_WEIGHT_EDIT_BUTTON_ID).on("click", function() {
+    $("#" + MUSCLE_WEIGHT_INPUT_ID).removeAttr("readonly");
+    $("#" + MUSCLE_WEIGHT_EDIT_BUTTON_ID).addClass("d-none");
+    $("#" + MUSCLE_WEIGHT_SAVE_BUTTON_ID).removeClass("d-none");
+});
+
+// bind save muscle weight button onClick event to save input to server
+$("#" + MUSCLE_WEIGHT_SAVE_BUTTON_ID).on("click", function() {
+    const record_date = get_record_date();
+    const muscle_weight = $("#" + MUSCLE_WEIGHT_INPUT_ID).val();
+    $.ajax({
+        url: "/api/edit_muscle_weight",
+        type: "POST",
+        data: {record_date: record_date,
+               muscle_weight: muscle_weight},
+        dataType: "json",
+        beforeSend:function() {
+            toggle_on_loading_progress_bar_record();
+        },
+        success:function(data) {
+            if (data["error_code"] == 0) {
+                $("#" + MUSCLE_WEIGHT_INPUT_ID).prop("readonly", true);
+                $("#" + MUSCLE_WEIGHT_SAVE_BUTTON_ID).addClass("d-none");
+                $("#" + MUSCLE_WEIGHT_EDIT_BUTTON_ID).removeClass("d-none");
+            } else {
+                alert_record_exercise_card(data["error_message"]);
+            }
+        },
+        complete:function() {
+            toggle_off_loading_progress_bar_record();
+        }
+    });
+});
+
+// bind edit fat rate button onClick event to enter edit mode
+$("#" + FAT_RATE_EDIT_BUTTON_ID).on("click", function() {
+    $("#" + FAT_RATE_INPUT_ID).removeAttr("readonly");
+    $("#" + FAT_RATE_EDIT_BUTTON_ID).addClass("d-none");
+    $("#" + FAT_RATE_SAVE_BUTTON_ID).removeClass("d-none");
+});
+
+// bind save fat rate button onClick event to save input to server
+$("#" + FAT_RATE_SAVE_BUTTON_ID).on("click", function() {
+    const record_date = get_record_date();
+    const fat_rate = $("#" + FAT_RATE_INPUT_ID).val();
+    $.ajax({
+        url: "/api/edit_fat_rate",
+        type: "POST",
+        data: {record_date: record_date,
+               fat_rate: fat_rate},
+        dataType: "json",
+        beforeSend:function() {
+            toggle_on_loading_progress_bar_record();
+        },
+        success:function(data) {
+            if (data["error_code"] == 0) {
+                $("#" + FAT_RATE_INPUT_ID).prop("readonly", true);
+                $("#" + FAT_RATE_SAVE_BUTTON_ID).addClass("d-none");
+                $("#" + FAT_RATE_EDIT_BUTTON_ID).removeClass("d-none");
             } else {
                 alert_record_exercise_card(data["error_message"]);
             }

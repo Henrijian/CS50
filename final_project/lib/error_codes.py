@@ -43,7 +43,9 @@ ERR_MAX_WEIGHT_INVALID = 41
 ERR_MAX_WEIGHT_REPEAT = 42
 ERR_MAX_WEIGHT_MISSING = 43
 ERR_DELETE_MAX_WEIGHT_FAILED = 44
-
+ERR_BODY_WEIGHT_INVALID = 45
+ERR_MUSCLE_WEIGHT_INVALID = 46
+ERR_FAT_RATE_INVALID = 47
 
 def error_message(error_code):
     if error_code == ERR_SUCCESS:
@@ -132,5 +134,11 @@ def error_message(error_code):
         return "Max weight record does not exist"
     elif error_code == ERR_DELETE_MAX_WEIGHT_FAILED:
         return "Delete max weight record failed"
+    elif error_code == ERR_BODY_WEIGHT_INVALID:
+        return "Body weight value is invalid"
+    elif error_code == ERR_MUSCLE_WEIGHT_INVALID:
+        return "Muscle weight value is invalid"
+    elif error_code == ERR_FAT_RATE_INVALID:
+        return "Fat rate value is invalid"
     else:
         return "Unknown error"
