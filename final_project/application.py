@@ -185,15 +185,15 @@ def record():
             max_weight_record_templates.append(template)
         # get body weight
         body_weight = get_body_records_weight(get_db(), record_id)
-        if body_weight < 0:
+        if (not body_weight) or (body_weight < 0):
             body_weight = ""
         # get muscle weight
         muscle_weight = get_body_records_muscle_weight(get_db(), record_id)
-        if muscle_weight < 0:
+        if (not muscle_weight) or (muscle_weight < 0):
             muscle_weight = ""
         # get fat rate
         fat_rate = get_body_records_fat_rate(get_db(), record_id)
-        if fat_rate < 0:
+        if (not fat_rate) or (fat_rate < 0):
             fat_rate = ""
 
         return render_template("record.html",
