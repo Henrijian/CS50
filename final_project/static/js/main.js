@@ -1,5 +1,6 @@
 const ALERT_CONTAINER_COMP_CLASS = "alert_at_func";
 const ALERT_MESSAGE_COMP_CLASS = "alert_at_func_message";
+const LOADING_MODAL_ID = "loading_modal";
 
 var alert_at = function(container, message) {
     var message_items = $(container).children("." + ALERT_CONTAINER_COMP_CLASS).find(" ." + ALERT_MESSAGE_COMP_CLASS);
@@ -112,8 +113,15 @@ var on_close_collpase_event = function(event) {
     show_closed_collapse_toggler(collapse_id);
 }
 
-$(".datepicker").datepicker(
-{
+var show_loading_modal = function() {
+    $("#" + LOADING_MODAL_ID).modal("show");
+}
+
+var hide_loading_modal = function() {
+    $("#" + LOADING_MODAL_ID).modal("hide");
+}
+
+$(".datepicker").datepicker({
     autoclose: true,
     disableTouchKeyboard: true,
     endDate: "0d",
@@ -143,3 +151,17 @@ $(document).on("hide.bs.collapse", ".collapse", function(event) {
 });
 
 refresh_collapse_toggler();
+
+// create loading modal when page is loading
+$(document).ready(function() {
+    const loading_modal_html = `<div id="${LOADING_MODAL_ID}" class="modal fade d-flex justify-content-center align-items-center" data-backdrop="static" data-keyboard="false" tabindex="-1">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content bg-transparent border-0">
+                                            <div class="spinner-border" role="status">
+                                                <span class="sr-only">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+    $(document.body).prepend(loading_modal_html);
+});
