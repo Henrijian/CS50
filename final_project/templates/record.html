@@ -265,23 +265,7 @@
 
 {% block footer %}
 <script>
-    const form_alert_id = "form_alert";
-
-    function show_form_alert() {
-        $("#" + form_alert_id).show();
-    }
-
-    function hide_form_alert() {
-        $("#" + form_alert_id).hide();
-    }
-
-    function form_alert(msg) {
-        $("#" + form_alert_id).html(msg);
-        show_form_alert();
-    }
-    hide_form_alert();
-</script>
-<script>
+    // record calendar
     const RECORD_DATE = new Date("{{ record_date_str }}");
     const RECORD_CALENDAR_ELEMENT = document.getElementById("record_calendar");
     const RECORD_CALENDAR = new FullCalendar.Calendar(RECORD_CALENDAR_ELEMENT, {
@@ -308,13 +292,41 @@
             RECORD_CALENDAR.select(info.dateStr);
         },
         select: function(selectionInfo) {
-            const selected_date = selectionInfo.startStr;
-            console.log(selected_date);
-            $("#" + RECORD_DATE_ID).datepicker("update", new Date(selected_date));
-            refresh_all_record_data(selected_date);
+            const selected_date_str = selectionInfo.startStr;
+            var today = new Date();
+            var selected_date = new Date(selected_date_str);
+            if (today.getDate() === selected_date.getDate()) {
+                var tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                $("#" + RECORD_DATE_ID).datepicker("setEndDate", tomorrow);
+                $("#" + RECORD_DATE_ID).datepicker("update", selected_date);
+                $("#" + RECORD_DATE_ID).datepicker("setEndDate", today);
+            } else {
+                $("#" + RECORD_DATE_ID).datepicker("update", selected_date);
+            }
+            refresh_all_record_data(selected_date_str);
         }
     });
     RECORD_CALENDAR.render();
+    // date picker
+    $(".datepicker").datepicker({
+        autoclose: true,
+        disableTouchKeyboard: true,
+        endDate: "{{ record_date_str }}",
+        forceParse: true,
+        format: "yyyy-mm-dd",
+        immediateUpdates: true,
+        multidate: false,
+        orientation: "left bottom",
+        startDate: "2000-01-01",
+        templates: {
+                        leftArrow: "<i class=\"fas fa-caret-left\"></i>",
+                        rightArrow: "<i class=\"fas fa-caret-right\"></i>"
+                    },
+        todayBtn: "linked",
+        todayHighlight: true,
+        toggleActive: false
+    });
 </script>
 <script src="{{ url_for('static', filename='js/record.js') }}"></script>
 {% endblock %}

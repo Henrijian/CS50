@@ -800,7 +800,6 @@ var initialize_muscle_weight_input = function() {
 $("#" + RECORD_DATE_ID).datepicker().on("changeDate", function(e) {
     const record_date = e.format();
     refresh_all_record_data(record_date);
-    // go to specified date in calendar
     RECORD_CALENDAR.select(record_date);
 });
 // muscle group selector onChange event

@@ -6,13 +6,7 @@
     display:none !important;
 }
 
-#loading_modal {
-    z-index: 1100;
-}
-
 #toast-container > .toast {
     -webkit-box-shadow: none;
     box-shadow; none;
 }
-
-org: /api/get_exercise_sets
