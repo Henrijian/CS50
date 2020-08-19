@@ -1,38 +1,19 @@
+//==================================================
+// global constants
+//==================================================
 const ALERT_CONTAINER_COMP_CLASS = "alert_at_func";
 const ALERT_MESSAGE_COMP_CLASS = "alert_at_func_message";
 const LOADING_MODAL_ID = "loading_modal";
-
-var alert_at = function(container, message) {
-    var message_items = $(container).children("." + ALERT_CONTAINER_COMP_CLASS).find(" ." + ALERT_MESSAGE_COMP_CLASS);
-    if (message_items.length == 0) {
-        const alert_item = document.createElement("div");
-        alert_item.classList.add("alert", "alert-danger", "alert-dismissible", "fade",  "show", ALERT_CONTAINER_COMP_CLASS);
-        alert_item.setAttribute("role", "alert");
-        container.insertBefore(alert_item, container.firstChild);
-
-        const message_item = document.createElement("div");
-        message_item.classList.add(ALERT_MESSAGE_COMP_CLASS);
-        message_item.textContent = message;
-        alert_item.appendChild(message_item);
-
-        const dismiss_btn = document.createElement("button");
-        dismiss_btn.classList.add("close");
-        dismiss_btn.setAttribute("type", "button");
-        dismiss_btn.setAttribute("data-dismiss", "alert");
-        alert_item.appendChild(dismiss_btn);
-
-        const dismiss_span = document.createElement("span");
-        dismiss_span.textContent = "x";
-        dismiss_btn.appendChild(dismiss_span);
-    } else {
-        message_items.get(0).textContent = message;
-    }
-}
-
-var close_alert_at = function(container) {
-    $(container).find("." + ALERT_CONTAINER_COMP_CLASS).alert("close");
-}
-
+//==================================================
+// global variables
+//==================================================
+var LOADING_COUNT = 0;
+//==================================================
+// function implementation
+//==================================================
+//--------------------------------------------------
+// collapse toggler
+//--------------------------------------------------
 var get_collapse_toggler = function(toggled_id) {
     if (!toggled_id) {
         return null;
@@ -55,7 +36,6 @@ var get_collapse_toggler = function(toggled_id) {
     });
     return toggler;
 }
-
 var show_opened_collpase_toggler = function(toggled_id) {
     const toggler = get_collapse_toggler(toggled_id);
     if (!toggler) {
@@ -69,7 +49,6 @@ var show_opened_collpase_toggler = function(toggled_id) {
     open_icon.css("display", "inline");
     close_icon.css("display", "none");
 }
-
 var show_closed_collapse_toggler = function(toggled_id) {
     const toggler = get_collapse_toggler(toggled_id);
     if (!toggler) {
@@ -83,7 +62,6 @@ var show_closed_collapse_toggler = function(toggled_id) {
     open_icon.css("display", "none");
     close_icon.css("display", "inline");
 }
-
 var refresh_collapse_toggler = function() {
     var togglers = $("[data-toggle='collapse']");
     if (togglers.length == 0) {
@@ -102,25 +80,45 @@ var refresh_collapse_toggler = function() {
         }
     });
 }
-
 var on_show_collapse_event = function(event) {
     const collapse_id = $(event.target).attr("id");
     show_opened_collpase_toggler(collapse_id);
 }
-
 var on_close_collpase_event = function(event) {
     const collapse_id = $(event.target).attr("id");
     show_closed_collapse_toggler(collapse_id);
 }
-
+//--------------------------------------------------
+// loading modal
+//--------------------------------------------------
 var show_loading_modal = function() {
     $("#" + LOADING_MODAL_ID).modal("show");
+    $("#" + LOADING_MODAL_ID).removeClass("hide_loading_modal");
 }
-
 var hide_loading_modal = function() {
     $("#" + LOADING_MODAL_ID).modal("hide");
+    $("#" + LOADING_MODAL_ID).addClass("hide_loading_modal");
 }
-
+var trigger_show_loading_modal = function() {
+    if (LOADING_COUNT == 0) {
+        show_loading_modal();
+    }
+    LOADING_COUNT += 1;
+}
+var trigger_hide_loading_modal = function() {
+    LOADING_COUNT -= 1;
+    if (LOADING_COUNT == 0) {
+        hide_loading_modal();
+    }
+}
+$("#" + LOADING_MODAL_ID).on("shown.bs.modal", function (event) {
+    if (LOADING_COUNT == 0) {
+        hide_loading_modal();
+    }
+});
+//--------------------------------------------------
+// date picker
+//--------------------------------------------------
 $(".datepicker").datepicker({
     autoclose: true,
     disableTouchKeyboard: true,
@@ -137,31 +135,41 @@ $(".datepicker").datepicker({
                 },
     todayBtn: "linked",
     todayHighlight: true,
-    toggleActive: true
+    toggleActive: false
 });
-
+//--------------------------------------------------
+// alert
+//--------------------------------------------------
+var warning = function(message) {
+    toastr.error(message);
+}
+//==================================================
+// initialization
+//==================================================
 // bind collapse toggler to switch icon in different state
 $(document).on("show.bs.collapse", ".collapse", function(event) {
     on_show_collapse_event(event);
 });
-
 // bind collapse toggler to switch icon in different state
 $(document).on("hide.bs.collapse", ".collapse", function(event) {
     on_close_collpase_event(event);
 });
-
 refresh_collapse_toggler();
-
-// create loading modal when page is loading
-$(document).ready(function() {
-    const loading_modal_html = `<div id="${LOADING_MODAL_ID}" class="modal fade d-flex justify-content-center align-items-center" data-backdrop="static" data-keyboard="false" tabindex="-1">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content bg-transparent border-0">
-                                            <div class="spinner-border" role="status">
-                                                <span class="sr-only">Loading...</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>`;
-    $(document.body).prepend(loading_modal_html);
-});
+// settings of alert dialog
+toastr.options = {
+  "closeButton": true,
+  "debug": false,
+  "newestOnTop": true,
+  "progressBar": true,
+  "positionClass": "toast-top-right",
+  "preventDuplicates": false,
+  "onclick": null,
+  "showDuration": "300",
+  "hideDuration": "1000",
+  "timeOut": "5000",
+  "extendedTimeOut": "1000",
+  "showEasing": "swing",
+  "hideEasing": "swing",
+  "showMethod": "show",
+  "hideMethod": "hide"
+}

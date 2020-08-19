@@ -1,3 +1,18 @@
 .sep {
     color: rgba(0,0,0,0);
 }
+
+.hide_loading_modal{
+    display:none !important;
+}
+
+#loading_modal {
+    z-index: 1100;
+}
+
+#toast-container > .toast {
+    -webkit-box-shadow: none;
+    box-shadow; none;
+}
+
+org: /api/get_exercise_sets
