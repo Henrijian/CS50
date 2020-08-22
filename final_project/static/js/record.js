@@ -916,7 +916,7 @@ var initialize_record_calendar = function(initial_date_str) {
             }
         },
         eventContent: {
-            html: "<span class=\"badge badge-danger rounded-circle\"><i class=\"fas fa-fire-alt\"></i></span>"
+            html: "<span class=\"badge badge-danger\"><i class=\"fas fa-fire-alt\"></i><span class=\"d-none d-lg-inline\">workout</span></span>"
         },
         eventColor: 'transparent',
         datesSet: function(dateInfo) {
