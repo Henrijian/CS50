@@ -46,6 +46,11 @@ ERR_DELETE_MAX_WEIGHT_FAILED = 44
 ERR_BODY_WEIGHT_INVALID = 45
 ERR_MUSCLE_WEIGHT_INVALID = 46
 ERR_FAT_RATE_INVALID = 47
+ERR_START_DATE_MISSING = 48
+ERR_END_DATE_MISSING = 49
+ERR_START_DATE_INVALID = 50
+ERR_END_DATE_INVALID = 51
+
 
 def error_message(error_code):
     if error_code == ERR_SUCCESS:
@@ -140,5 +145,13 @@ def error_message(error_code):
         return "Muscle weight value is invalid"
     elif error_code == ERR_FAT_RATE_INVALID:
         return "Fat rate value is invalid"
+    elif error_code == ERR_START_DATE_MISSING:
+        return "Start date cannot be empty"
+    elif error_code == ERR_END_DATE_MISSING:
+        return "End date cannot be empty"
+    elif error_code == ERR_START_DATE_INVALID:
+        return "Start date is invalid"
+    elif error_code == ERR_END_DATE_INVALID:
+        return "End date is invalid"
     else:
         return "Unknown error"

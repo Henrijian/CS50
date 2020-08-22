@@ -1,6 +1,7 @@
 //==================================================
 // global constants
 //==================================================
+const RECORD_CALENDAR_ID = "record_calendar"
 const MODAL_ADD_EXERCISE_ID = "modal_add_exercise";
 const MODAL_ADD_MAX_WEIGHT_ID = "modal_add_max_weight";
 const STRENGTH_MUSCLE_GROUP_SELECT_ID = "strength_muscle_group_select"
@@ -29,6 +30,7 @@ const CARDIO_EXERCISE_TAB_PANE_ID = "cardio_exercise_tab_pane";
 const EXERCISE_RECORDS_ID = "exercise_records";
 const MAX_WEIGHT_RECORDS_ID = "max_weight_records";
 const RECORD_DATE_ID = "record_date";
+const DATEPICKER_RECORD_DATE_ID = "datepicker_record_date";
 const BODY_WEIGHT_INPUT_ID = "body_weight_input";
 const BODY_WEIGHT_EDIT_BUTTON_ID = "btn_edit_body_weight";
 const BODY_WEIGHT_SAVE_BUTTON_ID = "btn_save_body_weight";
@@ -38,6 +40,11 @@ const MUSCLE_WEIGHT_SAVE_BUTTON_ID = "btn_save_muscle_weight";
 const FAT_RATE_INPUT_ID = "fat_rate_input";
 const FAT_RATE_EDIT_BUTTON_ID = "btn_edit_fat_rate";
 const FAT_RATE_SAVE_BUTTON_ID = "btn_save_fat_rate";
+const EXERCISE_EVENT_PREFIX = "exercise_event_";
+//==================================================
+// global variables
+//==================================================
+var RECORD_CALENDAR = null;
 //==================================================
 // functions implementation
 //==================================================
@@ -51,7 +58,6 @@ var get_record_date = function() {
     }
     return input_exercise_date.value;
 }
-// refresh all record data
 var refresh_all_record_data = function(record_date) {
     const exercise_records_container = document.getElementById(EXERCISE_RECORDS_ID);
     if (!exercise_records_container) {
@@ -469,7 +475,7 @@ var refresh_exercise_records = function(record_date) {
             if (data["error_code"] == 0) {
                 const result = JSON.parse(data["result"]);
                 const exercise_records_html = result["exercise_records_html"];
-                exercise_records_container.innerHTML = exercise_records;
+                exercise_records_container.innerHTML = exercise_records_html;
                 refresh_collapse_toggler();
             } else {
                 warning(data["error_message"]);
@@ -789,6 +795,146 @@ var initialize_fat_rate_input = function() {
 var initialize_muscle_weight_input = function() {
     $("#" + MUSCLE_WEIGHT_INPUT_ID).val("");
 }
+//--------------------------------------------------
+// date picker
+//--------------------------------------------------
+var initialize_datepicker = function(initial_date_str) {
+    $("#" + RECORD_DATE_ID).datepicker("destroy");
+    $("#" + RECORD_DATE_ID).datepicker({
+        autoclose: true,
+        disableTouchKeyboard: true,
+        endDate: initial_date_str,
+        forceParse: true,
+        format: "yyyy-mm-dd",
+        immediateUpdates: true,
+        multidate: false,
+        orientation: "left bottom",
+        startDate: "2000-01-01",
+        templates: {
+            leftArrow: "<i class=\"fas fa-caret-left\"></i>",
+            rightArrow: "<i class=\"fas fa-caret-right\"></i>"},
+        todayBtn: "linked",
+        todayHighlight: true,
+        toggleActive: false
+    });
+}
+
+//--------------------------------------------------
+// record calendar
+//--------------------------------------------------
+var refresh_calendar_exercise_events_between = function(start_date, end_date) {
+    // clear exercise events first
+    var exercise_events = RECORD_CALENDAR.getEvents();
+    $.each(exercise_events, function(index, exercise_event) {
+        if (exercise_event.id.startsWith(EXERCISE_EVENT_PREFIX)){
+            exercise_event.remove();
+        }
+    });
+    // load exercise events
+    $.ajax({
+        url: "/api/get_exercise_dates",
+        type: "GET",
+        data: {
+            start_year: start_date.getFullYear(),
+            start_month: start_date.getMonth() + 1,
+            start_date: start_date.getDate(),
+            end_year: end_date.getFullYear(),
+            end_month: end_date.getMonth() + 1,
+            end_date: end_date.getDate()
+        },
+        beforeSend:function() {
+            trigger_show_loading_modal();
+        },
+        success:function(data) {
+            if (data["error_code"] == 0) {
+                var exercise_dates = $.parseJSON(data["result"]);
+                $.each(exercise_dates, function(index, value) {
+                    RECORD_CALENDAR.addEvent({
+                        id: EXERCISE_EVENT_PREFIX + value,
+                        start: value,
+                        allDay: true
+                    });
+                });
+            } else {
+                warning(data["error_message"]);
+            }
+        },
+        complete:function() {
+            trigger_hide_loading_modal();
+        }
+    });
+}
+var refresh_record_calendar = function() {
+    const start_date = RECORD_CALENDAR.view.activeStart;
+    const end_date = RECORD_CALENDAR.view.activeEnd;
+    refresh_calendar_exercise_events_between(start_date, end_date);
+    RECORD_CALENDAR.select(get_record_date());
+}
+var initialize_record_calendar = function(initial_date_str) {
+    const record_calendar_element = document.getElementById(RECORD_CALENDAR_ID);
+    RECORD_CALENDAR = new FullCalendar.Calendar(record_calendar_element, {
+        bootstrapFontAwesome: {
+            prev: 'fa-chevron-left',
+            next: 'fa-chevron-right'
+        },
+        dateClick: function(info) {
+            const today = new Date();
+            const clicked_date_str = info.dateStr;
+            const clicked_date = new Date(clicked_date_str);
+            if (clicked_date.setHours(0,0,0,0) <= today.setHours(0,0,0,0)) {
+                RECORD_CALENDAR.select(clicked_date_str);
+            }
+        },
+        eventClick: function(eventClickInfo) {
+            const today = new Date();
+            const clicked_date_str = eventClickInfo.event.startStr;
+            const clicked_date = new Date(clicked_date_str);
+            if (clicked_date.setHours(0,0,0,0) <= today.setHours(0,0,0,0)) {
+                RECORD_CALENDAR.select(clicked_date_str);
+            }
+        },
+        eventContent: {
+            html: "<span class=\"badge badge-danger\"><i class=\"fas fa-fire-alt\"></i> workout</span>"
+        },
+        eventColor: 'transparent',
+        datesSet: function(dateInfo) {
+            const start_date = dateInfo.start;
+            const end_date = dateInfo.end;
+            refresh_calendar_exercise_events_between(start_date, end_date);
+            RECORD_CALENDAR.select(get_record_date());
+        },
+        fixedWeekCount: false,
+        headerToolbar: {
+            start: "title",
+            center: "",
+            end: "prev today next"
+        },
+        height: "auto",
+        initialDate: initial_date_str,
+        initialView: "dayGridMonth",
+        select: function(selectionInfo) {
+            const today = new Date();
+            const selected_date_str = selectionInfo.startStr;
+            const selected_date = new Date(selected_date_str);
+            if (today.setHours(0,0,0,0) == selected_date.setHours(0,0,0,0)) {
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                $("#" + RECORD_DATE_ID).datepicker("setEndDate", tomorrow);
+                $("#" + RECORD_DATE_ID).datepicker("update", selected_date);
+                $("#" + RECORD_DATE_ID).datepicker("setEndDate", today);
+            } else {
+                $("#" + RECORD_DATE_ID).datepicker("update", selected_date);
+            }
+            refresh_all_record_data(selected_date_str);
+        },
+        showNonCurrentDates: false,
+        themeSystem: "bootstrap",
+        timeZone: 'local',
+        unselectAuto: false
+    });
+    RECORD_CALENDAR.render();
+    RECORD_CALENDAR.select(initial_date_str);
+}
 
 //==================================================
 // event binding
@@ -917,6 +1063,7 @@ $("#" + BTN_ADD_EXERCISE_ID).on("click", function() {
             },
             success:function(data) {
                 refresh_exercise_records(exercise_date);
+                refresh_record_calendar();
                 $("#" + MODAL_ADD_EXERCISE_ID).modal('hide');
             },
             complete:function() {
@@ -954,6 +1101,7 @@ $("#" + BTN_ADD_EXERCISE_ID).on("click", function() {
             },
             success:function(data) {
                 refresh_exercise_records(exercise_date);
+                refresh_record_calendar();
                 $("#" + MODAL_ADD_EXERCISE_ID).modal('hide');
             },
             complete:function() {

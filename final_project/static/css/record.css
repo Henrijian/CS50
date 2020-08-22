@@ -1,0 +1,11 @@
+th, td {
+    text-align: center;
+}
+
+.fc-day-past, fc-day-today {
+    color: Black;
+}
+
+.fc-day-future {
+    color: Silver;
+}

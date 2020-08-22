@@ -706,6 +706,53 @@ def edit_fat_rate():
         return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
 
 
+@app.route("/api/get_exercise_dates", methods=["GET", "POST"])
+@login_required
+def get_exercise_dates():
+    if request.method == "POST":
+        return response_json(ERR_UNSUPPORT_REQUEST_METHOD)
+    else:
+        # Get request start date
+        start_year = request.args.get("start_year", type=int)
+        start_month = request.args.get("start_month", type=int)
+        start_date = request.args.get("start_date", type=int)
+        if (not start_year) or (not start_month) or (not start_date):
+            return response_json(ERR_START_DATE_MISSING)
+        try:
+            start = datetime.datetime.strptime("%d-%d-%d" % (start_year, start_month, start_date), "%Y-%m-%d")
+        except ValueError:
+            return response_json(ERR_START_DATE_INVALID)
+        # Get request end date
+        end_year = request.args.get("end_year", type=int)
+        end_month = request.args.get("end_month", type=int)
+        end_date = request.args.get("end_date", type=int)
+        if (not end_year) or (not end_month) or (not end_date):
+            return response_json(ERR_END_DATE_MISSING)
+        try:
+            end = datetime.datetime.strptime("%d-%d-%d" % (end_year, end_month, end_date), "%Y-%m-%d")
+        except ValueError:
+            return response_json(ERR_END_DATE_INVALID)
+        # Get user id
+        user_id = session["user_id"]
+        # Get record ids between start and end date(exclusive)
+        record_ids = get_record_ids_by_range(get_db(), user_id, start, end)
+        for i, record_id in reversed(list(enumerate(record_ids))):
+            if not record_details_record_id_exist(get_db(), record_id):
+                del record_ids[i]
+        record_ids = sorted(record_ids)
+        exercise_dates = []
+        for record_id in record_ids:
+            exercise_date = get_record_date_by_id(get_db(), record_id)
+            exercise_dates.append(exercise_date)
+        print(exercise_dates)
+        exercise_date_strs = []
+        for exercise_date in exercise_dates:
+            exercise_date_str = exercise_date.strftime("%Y-%m-%d")
+            exercise_date_strs.append(exercise_date_str)
+        print(exercise_date_strs)
+        return response_json(ERR_SUCCESS, result=exercise_date_strs)
+
+
 ##################################################
 # API - HTML
 ##################################################
@@ -803,6 +850,7 @@ def get_exercise_records_html():
                 raise Exception("Unknown exercise type* %s" % exercise_type)
             exercise_records_htmls.append(exercise_record_template)
         exercise_records_html = "\n".join(exercise_records_htmls)
+
         # Organize result
         result = {"exercise_records_html": exercise_records_html}
         return response_json(ERR_SUCCESS, result=result)

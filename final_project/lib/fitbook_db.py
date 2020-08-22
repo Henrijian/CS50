@@ -342,9 +342,53 @@ def get_record_id(db, uid, date):
     return rid
 
 
+def get_record_ids_by_range(db, uid, start_date, end_date):
+    if not isinstance(start_date, datetime.datetime):
+        raise Exception("start_date is not datetime type!")
+    if not isinstance(end_date, datetime.datetime):
+        raise Exception("end_date is not datetime type!")
+    if not (start_date < end_date):
+        raise Exception("start date is not early than end date")
+    start_date_str = start_date.strftime(RECORDS_DATE_FMT)
+    end_date_str = end_date.strftime(RECORDS_DATE_FMT)
+    sql_fmt = """SELECT %s FROM %s 
+                 WHERE uid=? 
+                 AND strftime(\"%s\", \"%s\") <= strftime(\"%s\", date) 
+                 AND strftime(\"%s\", date) < strftime(\"%s\", \"%s\");"""
+    sql = sql_fmt % (RECORDS_ID_COL, RECORDS_TABLE, RECORDS_DATE_FMT, start_date_str, RECORDS_DATE_FMT,
+                     RECORDS_DATE_FMT, RECORDS_DATE_FMT, end_date_str)
+    cur = db.cursor()
+    cur.execute(sql, (uid,))
+    ids = []
+    rows = cur.fetchall()
+    for row in rows:
+        ids.append(row[RECORDS_ID_COL])
+    return ids
+
+
+def get_record_date_by_id(db, record_id):
+    sql = "SELECT %s FROM %s WHERE %s=?" % (RECORDS_DATE_COL, RECORDS_TABLE, RECORDS_ID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (record_id,))
+    row = cur.fetchone()
+    date = None
+    if row:
+        date_str = row[RECORDS_DATE_COL]
+        print(date_str)
+        date = datetime.datetime.strptime(date_str, RECORDS_DATE_FMT)
+    return date
+
 ##################################################
 # record_details table
 ##################################################
+def record_details_record_id_exist(db, record_id):
+    sql = "SELECT * FROM %s WHERE %s=?" % (RECORD_DETAILS_TABLE, RECORD_DETAILS_RID_COL)
+    cur = db.cursor()
+    cur.execute(sql, (record_id,))
+    rows = cur.fetchall()
+    return len(rows) > 0
+
+
 def record_details_id_exist(db, record_details_id):
     sql = "SELECT * FROM %s WHERE %s=?" % (RECORD_DETAILS_TABLE, RECORD_DETAILS_ID_COL)
     cur = db.cursor()
@@ -387,6 +431,7 @@ def delete_record_details(db, rdid):
     if cur.rowcount < 1:
         raise Exception("Delete record details by record details id(%s) failed" % rdid)
     db.commit()
+
 
 def get_record_details_id(db, rid, eid, order):
     sql = "SELECT %s FROM %s WHERE %s=? AND %s=? AND \"%s\"=?" % (RECORD_DETAILS_ID_COL, RECORD_DETAILS_TABLE,
