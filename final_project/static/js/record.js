@@ -1,7 +1,11 @@
 //==================================================
 // global constants
 //==================================================
-const RECORD_CALENDAR_ID = "record_calendar"
+const RECORD_CALENDAR_ID = "record_calendar";
+const RECORD_CALENDAR_HEADER_ID = "record_calendar_header";
+const BTN_RECORD_CALENDAR_PREV_ID = "btn_record_calendar_prev";
+const BTN_RECORD_CALENDAR_TODAY_ID = "btn_record_calendar_today";
+const BTN_RECORD_CALENDAR_NEXT_ID = "btn_record_calendar_next";
 const MODAL_ADD_EXERCISE_ID = "modal_add_exercise";
 const MODAL_ADD_MAX_WEIGHT_ID = "modal_add_max_weight";
 const STRENGTH_MUSCLE_GROUP_SELECT_ID = "strength_muscle_group_select"
@@ -822,6 +826,24 @@ var initialize_datepicker = function(initial_date_str) {
 //--------------------------------------------------
 // record calendar
 //--------------------------------------------------
+var disable_record_calendar_prev_button = function() {
+    $("#" + BTN_RECORD_CALENDAR_PREV_ID).attr("disabled", true);
+}
+var enable_record_calendar_prev_button = function() {
+    $("#" + BTN_RECORD_CALENDAR_PREV_ID).attr("disabled", false);
+}
+var disable_record_calendar_next_button = function() {
+    $("#" + BTN_RECORD_CALENDAR_NEXT_ID).attr("disabled", true);
+}
+var enable_record_calendar_next_button = function() {
+    $("#" + BTN_RECORD_CALENDAR_NEXT_ID).attr("disabled", false);
+}
+var disable_record_calendar_today_button = function() {
+    $("#" + BTN_RECORD_CALENDAR_TODAY_ID).attr("disabled", true);
+}
+var enable_record_calendar_today_button = function() {
+    $("#" + BTN_RECORD_CALENDAR_TODAY_ID).attr("disabled", false);
+}
 var refresh_calendar_exercise_events_between = function(start_date, end_date) {
     // clear exercise events first
     var exercise_events = RECORD_CALENDAR.getEvents();
@@ -894,26 +916,38 @@ var initialize_record_calendar = function(initial_date_str) {
             }
         },
         eventContent: {
-            html: "<span class=\"badge badge-danger\"><i class=\"fas fa-fire-alt\"></i> workout</span>"
+            html: "<span class=\"badge badge-danger rounded-circle\"><i class=\"fas fa-fire-alt\"></i></span>"
         },
         eventColor: 'transparent',
         datesSet: function(dateInfo) {
+            // refresh header
+            $("#" + RECORD_CALENDAR_HEADER_ID).text(dateInfo.view.title);
+            // refresh buttons
+            const today = new Date();
             const start_date = dateInfo.start;
             const end_date = dateInfo.end;
+            if (today.setHours(0,0,0,0) < end_date.setHours(0,0,0,0)) {
+                disable_record_calendar_next_button();
+            } else {
+                enable_record_calendar_next_button();
+            }
+            if (start_date.setHours(0,0,0,0) <= today.setHours(0,0,0,0) &&
+                today.setHours(0,0,0,0) < end_date.setHours(0,0,0,0)) {
+                disable_record_calendar_today_button();
+            } else {
+                enable_record_calendar_today_button();
+            }
+            // refresh events
             refresh_calendar_exercise_events_between(start_date, end_date);
+            // refresh selected date
             const selected_date = new Date(get_record_date());
             if (start_date.setHours(0,0,0,0) <= selected_date.setHours(0,0,0,0) &&
                 selected_date.setHours(0,0,0,0) < end_date.setHours(0,0,0,0)) {
                 RECORD_CALENDAR.select(get_record_date());
             }
-
         },
         fixedWeekCount: false,
-        headerToolbar: {
-            start: "title",
-            center: "",
-            end: "prev today next"
-        },
+        headerToolbar: false,
         height: "auto",
         initialDate: initial_date_str,
         initialView: "dayGridMonth",
@@ -952,7 +986,19 @@ var initialize_record_calendar = function(initial_date_str) {
 // event binding
 //==================================================
 //--------------------------------------------------
-// general - components
+// record calendar - components
+//--------------------------------------------------
+$("#" + BTN_RECORD_CALENDAR_PREV_ID).on("click", function() {
+    RECORD_CALENDAR.prev();
+});
+$("#" + BTN_RECORD_CALENDAR_NEXT_ID).on("click", function() {
+    RECORD_CALENDAR.next();
+});
+$("#" + BTN_RECORD_CALENDAR_TODAY_ID).on("click", function() {
+    RECORD_CALENDAR.today();
+});
+//--------------------------------------------------
+// datepicker - components
 //--------------------------------------------------
 // datepicker onChangeDate event
 $("#" + RECORD_DATE_ID).datepicker().on("changeDate", function(e) {

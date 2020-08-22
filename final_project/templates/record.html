@@ -10,7 +10,23 @@
 
 {% block main %}
 <div class="row row-cols-md-2 justify-content-center">
-    <div class="col-md-7 p-0 pr-md-3">
+    <div class="col-md-7 px-3 pr-md-3">
+        <div class="row my-3">
+            <div class="col-6 d-flex justify-content-start align-items-center">
+                <h5 id="record_calendar_header" class="m-0"></h5>
+            </div>
+            <div class="col-6 d-flex justify-content-end">
+                <button id="btn_record_calendar_prev" class="btn btn-primary btn-sm" type="button">
+                    <i class="fas fa-caret-left"></i>
+                </button>
+                <button id="btn_record_calendar_today" class="btn btn-primary btn-sm mx-1" type="button">
+                    today
+                </button>
+                <button id="btn_record_calendar_next" class="btn btn-primary btn-sm" type="button">
+                    <i class="fas fa-caret-right"></i>
+                </button>
+            </div>
+        </div>
         <div id="record_calendar" class="mb-3"></div>
     </div>
     <div class="col-md-4 bg-primary text-white p-0">
@@ -106,15 +122,15 @@
                                             <div id="cardio_exercise_time" class="input-group input-group-sm">
                                                 <input id="cardio_exercise_hrs" type="number" class="form-control text-right" placeholder="Hours" value="">
                                                 <div class="input-group-append">
-                                                    <span class="input-group-text">HRS</span>
+                                                    <span class="input-group-text px-1">HRS</span>
                                                 </div>
                                                 <input id="cardio_exercise_mins" type="number" class="form-control text-right" placeholder="Minutes" value="">
                                                 <div class="input-group-append">
-                                                    <span class="input-group-text">MINS</span>
+                                                    <span class="input-group-text px-1">MINS</span>
                                                 </div>
                                                 <input id="cardio_exercise_secs" type="number" class="form-control text-right" placeholder="Seconds" value="">
                                                 <div class="input-group-append">
-                                                    <span class="input-group-text">SECS</span>
+                                                    <span class="input-group-text px-1">SECS</span>
                                                 </div>
                                             </div>
                                         </div>
