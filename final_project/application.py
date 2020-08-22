@@ -65,7 +65,7 @@ if not os.environ.get("API_KEY"):
 @app.route("/")
 @login_required
 def index():
-    return render_template("index.html")
+    return redirect("/record")
 
 
 @app.route("/register", methods=["GET", "POST"])
