@@ -54,11 +54,6 @@ def after_request(response):
     return response
 
 
-# Make sure API key is set
-if not os.environ.get("API_KEY"):
-    raise RuntimeError("API_KEY not set")
-
-
 ##################################################
 # Pages
 ##################################################
