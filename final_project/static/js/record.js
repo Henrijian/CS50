@@ -901,7 +901,12 @@ var initialize_record_calendar = function(initial_date_str) {
             const start_date = dateInfo.start;
             const end_date = dateInfo.end;
             refresh_calendar_exercise_events_between(start_date, end_date);
-            RECORD_CALENDAR.select(get_record_date());
+            const selected_date = new Date(get_record_date());
+            if (start_date.setHours(0,0,0,0) <= selected_date.setHours(0,0,0,0) &&
+                selected_date.setHours(0,0,0,0) < end_date.setHours(0,0,0,0)) {
+                RECORD_CALENDAR.select(get_record_date());
+            }
+
         },
         fixedWeekCount: false,
         headerToolbar: {
@@ -924,6 +929,13 @@ var initialize_record_calendar = function(initial_date_str) {
                 $("#" + RECORD_DATE_ID).datepicker("setEndDate", today);
             } else {
                 $("#" + RECORD_DATE_ID).datepicker("update", selected_date);
+            }
+            // check whether refresh calendar view
+            const view_start_date = RECORD_CALENDAR.view.activeStart;
+            const view_end_date = RECORD_CALENDAR.view.activeEnd;
+            if (selected_date.setHours(0,0,0,0) < view_start_date.setHours(0,0,0,0) ||
+                view_end_date.setHours(0,0,0,0) <= selected_date.setHours(0,0,0,0)) {
+                RECORD_CALENDAR.gotoDate(selectionInfo.start);
             }
             refresh_all_record_data(selected_date_str);
         },
