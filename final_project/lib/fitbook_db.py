@@ -374,7 +374,6 @@ def get_record_date_by_id(db, record_id):
     date = None
     if row:
         date_str = row[RECORDS_DATE_COL]
-        print(date_str)
         date = datetime.datetime.strptime(date_str, RECORDS_DATE_FMT)
     return date
 

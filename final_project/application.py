@@ -753,12 +753,10 @@ def get_exercise_dates():
         for record_id in record_ids:
             exercise_date = get_record_date_by_id(get_db(), record_id)
             exercise_dates.append(exercise_date)
-        print(exercise_dates)
         exercise_date_strs = []
         for exercise_date in exercise_dates:
             exercise_date_str = exercise_date.strftime("%Y-%m-%d")
             exercise_date_strs.append(exercise_date_str)
-        print(exercise_date_strs)
         return response_json(ERR_SUCCESS, result=exercise_date_strs)
 
 
