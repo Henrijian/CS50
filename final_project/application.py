@@ -608,6 +608,9 @@ def edit_body_weight():
         # Get body weight
         body_weight = request.form["body_weight"]
         # Check body weight
+        # if no input value skip processing
+        if not body_weight:
+            return response_json(ERR_SUCCESS)
         if not body.is_body_weight_valid(body_weight):
             return response_json(ERR_BODY_WEIGHT_INVALID)
         # Add/update body weight to database
@@ -649,6 +652,9 @@ def edit_muscle_weight():
         # Get muscle weight
         muscle_weight = request.form["muscle_weight"]
         # Check muscle weight
+        # if no input value skip processing
+        if not muscle_weight:
+            return response_json(ERR_SUCCESS)
         if not body.is_muscle_weight_valid(muscle_weight):
             return response_json(ERR_MUSCLE_WEIGHT_INVALID)
         # Add/update muscle weight to database
@@ -690,6 +696,9 @@ def edit_fat_rate():
         # Get fat rate
         fat_rate = request.form["fat_rate"]
         # Check fat rate
+        # if no input value skip processing
+        if not fat_rate:
+            return response_json(ERR_SUCCESS)
         if not body.is_fat_rate_valid(fat_rate):
             return response_json(ERR_FAT_RATE_INVALID)
         # Add/update muscle weight to database
