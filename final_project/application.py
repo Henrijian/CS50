@@ -17,6 +17,8 @@ from lib import body
 # Configure application
 app = Flask(__name__)
 
+# Set the secret key to some random bytes. Keep this really secret!
+app.secret_key = b"\x1f\x89\xc6M'Bl\x80U\xdf\x154\x0b\xc9]:"
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 # Configure session to use filesystem (instead of signed cookies)
