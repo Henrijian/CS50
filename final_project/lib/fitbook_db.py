@@ -73,6 +73,7 @@ def get_usernames(db):
 
 
 def get_user_hash(db, username):
+    username = username.lower()
     sql = "SELECT %s FROM %s WHERE %s=?" % (USERS_HASH_COL, USERS_TABLE, USERS_USERNAME_COL)
     cur = db.cursor()
     cur.execute(sql, (username,))
